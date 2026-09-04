@@ -1,4 +1,4 @@
-# Session 8 — Docker Networking & Volumes — Task
+# Session 8 - Docker Networking & Volumes - Task
 
 - **Name:** Netram
 - **Enrollment No:** 24BCS10329

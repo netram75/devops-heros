@@ -1,4 +1,4 @@
-# Session 6–7 — Docker (Task 2) — Task
+# Session 6–7 - Docker (Task 2) - Task
 
 - **Name:** Netram
 - **Enrollment No:** 24BCS10329

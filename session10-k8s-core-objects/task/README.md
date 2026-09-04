@@ -1,4 +1,4 @@
-# Session 10 — Kubernetes Core Objects — Task
+# Session 10 - Kubernetes Core Objects - Task
 
 - **Name:** Netram
 - **Enrollment No:** 24BCS10329

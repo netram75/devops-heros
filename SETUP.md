@@ -2,7 +2,7 @@
 
 This folder is a starting point for the DevOps Heros homework: all the course material,
 plus an empty write-up template for every session's task. There is no git history and no
-author identity in it yet — the first commit should be yours.
+author identity in it yet - the first commit should be yours.
 
 ## 1. Make it yours
 
@@ -20,7 +20,7 @@ git commit -m "Initial commit: course notes and task scaffolds"
 ```
 
 (If you would rather start from scratch, delete the `.git` folder and run `git init -b main`
-yourself — nothing else depends on it.)
+yourself - nothing else depends on it.)
 
 ## 2. Put your name in the write-ups
 
@@ -53,7 +53,7 @@ git push -u origin main
 
 1. Read the session notes in the `sessionN-*/` folder.
 2. Find the task in the homework doc (linked from the root [README](README.md)).
-3. Actually run it — on WSL/Linux for the Linux, shell and networking sessions; with Docker
+3. Actually run it - on WSL/Linux for the Linux, shell and networking sessions; with Docker
    for sessions 6–8; with minikube or kind for sessions 9–10.
 4. Write up what you ran and what came back in `task/README.md`, and put your screenshots
    in `task/screenshots/`.
@@ -83,5 +83,5 @@ sudo apt-get install dnsutils iputils-tracepath
 - **Write down the errors you hit** and how you fixed them. That section of the template is
   the most useful part of the whole write-up when you come back to it.
 - **Your screenshots should come from your own machine.** Hostnames, IPs, container IDs and
-  timestamps are all visible in terminal output, so borrowed screenshots are obvious — and
+  timestamps are all visible in terminal output, so borrowed screenshots are obvious - and
   the point of the exercise is the run, not the picture.

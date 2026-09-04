@@ -1,4 +1,4 @@
-# Session 9 — Kubernetes — Task
+# Session 9 - Kubernetes - Task
 
 - **Name:** Netram
 - **Enrollment No:** 24BCS10329
