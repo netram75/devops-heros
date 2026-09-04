@@ -1,0 +1,13 @@
+# Single-stage equivalent of ./Dockerfile, kept only as a measurement baseline
+# so the multi-stage saving can be compared rather than assumed.
+#
+#   docker build -f Dockerfile.single -t single-stage-app .
+#   docker build                      -t multi-stage-app  .
+#   docker images single-stage-app multi-stage-app
+FROM node:24-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["npm", "start"]
