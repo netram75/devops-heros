@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: session17
+  labels:
+    app.kubernetes.io/part-of: devops-heros
+    # Pod Security Admission: reject any pod that does not meet the "restricted" profile.
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
