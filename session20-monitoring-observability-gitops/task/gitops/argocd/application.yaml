@@ -1,0 +1,22 @@
+# Applied once by hand (kubectl apply). It lives outside the synced path,
+# so Argo CD never tries to manage its own Application object.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: s20-podinfo
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/netram75/devops-heros
+    targetRevision: session20-gitops
+    path: session20-monitoring-observability-gitops/task/gitops/apps/podinfo/overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: s20-gitops
+  syncPolicy:
+    automated:
+      prune: true      # delete live objects that were removed from Git
+      selfHeal: true   # undo manual changes made with kubectl
+    syncOptions:
+      - CreateNamespace=true

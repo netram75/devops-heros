@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: podinfo
+spec:
+  replicas: 1                  # overridden per environment by the overlay
+  selector:
+    matchLabels: { app: podinfo }
+  template:
+    metadata:
+      labels: { app: podinfo }
+    spec:
+      containers:
+        - name: podinfo
+          image: ghcr.io/stefanprodan/podinfo:6.9.2   # tag pinned by the overlay
+          command: ["./podinfo", "--port=9898"]
+          ports:
+            - { name: http, containerPort: 9898 }
+          readinessProbe:
+            httpGet: { path: /readyz, port: http }
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { cpu: 100m, memory: 64Mi }
