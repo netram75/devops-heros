@@ -18,7 +18,7 @@ Update the status column as you go.
 | 9 | Kubernetes Fundamentals | [Readme.md](session9-k8s/Readme.md) | [task](session9-k8s/task/) | done |
 | 10 | Kubernetes Pods, ReplicaSets & Deployments | [Readme.md](session10-k8s-core-objects/Readme.md) | [task](session10-k8s-core-objects/task/) | done |
 | 11 | Kubernetes Networking & Services | [README.md](session-11-kubernetes-services/README.md) | [task](session-11-kubernetes-services/task/) | not started |
-| 12 | Kubernetes Ingress, ConfigMaps & Secrets | [README.md](session-12-ingress-configmaps-secrets/README.md) | [task](session-12-ingress-configmaps-secrets/task/) | not started |
+| 12 | Kubernetes Ingress, ConfigMaps & Secrets | [README.md](session-12-ingress-configmaps-secrets/README.md) | [task](session-12-ingress-configmaps-secrets/task/) | done |
 | 13 | Kubernetes Storage, HPA & Probes | [folder](session-13-storage-hpa-probes/) | [task](session-13-storage-hpa-probes/task/) | not started |
 | 14 | Kubernetes Troubleshooting | [README.md](session-14-kubernetes-troubleshooting/README.md) | [task](session-14-kubernetes-troubleshooting/task/) | not started |
 | 15 | Helm | [README.md](session-15-helm/README.md) | [task](session-15-helm/task/) | done |

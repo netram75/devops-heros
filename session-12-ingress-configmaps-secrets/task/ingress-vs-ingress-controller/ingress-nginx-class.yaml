@@ -1,0 +1,17 @@
+# The working twin: identical rule, but ingressClassName: nginx, which the
+# ingress-nginx controller watches.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: real-ingress
+  namespace: s12-web
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: real.127.0.0.1.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: {name: frontend-svc, port: {number: 80}}
