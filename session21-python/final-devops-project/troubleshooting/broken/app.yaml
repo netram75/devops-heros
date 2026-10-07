@@ -1,0 +1,87 @@
+# Final Troubleshooting Challenge: the BROKEN version, with 5 planted bugs.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: final-troubleshoot
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ts-app-secret
+  namespace: final-troubleshoot
+type: Opaque
+stringData:
+  api-token: "demo-not-a-real-token-456"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ts-app
+  namespace: final-troubleshoot
+  labels: { app.kubernetes.io/name: ts-app }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app.kubernetes.io/name: ts-app }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: ts-app }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 10001, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: app
+          image: final-app:1.0.1                      # BUG 1: this tag was never built
+          imagePullPolicy: IfNotPresent
+          ports: [{ name: http, containerPort: 8080 }]
+          env:
+            - name: API_TOKEN
+              valueFrom:
+                secretKeyRef: { name: ts-app-secret, key: api_token }   # BUG 2: Secret has "api-token" (dash)
+          resources:
+            limits: { memory: 192Mi }                  # BUG 5: no CPU request or limit, so the HPA cannot compute utilisation
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: ["ALL"] } }
+          readinessProbe:
+            httpGet: { path: /ready, port: http }       # BUG 3: the app has no /ready route (404)
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 10
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: { medium: Memory, sizeLimit: 16Mi } }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ts-app
+  namespace: final-troubleshoot
+spec:
+  selector: { app.kubernetes.io/name: ts-api }          # BUG 4: typo, matches no pod
+  ports: [{ name: http, port: 80, targetPort: http }]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ts-app
+  namespace: final-troubleshoot
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: ts.127.0.0.1.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: ts-app, port: { name: http } } }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ts-app
+  namespace: final-troubleshoot
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: ts-app }
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 50 } }
