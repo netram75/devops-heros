@@ -1,0 +1,9 @@
+final-app {{ .Values.image.tag }} is installed as release {{ .Release.Name }} in namespace {{ .Release.Namespace }}.
+
+Check it:
+  kubectl -n {{ .Release.Namespace }} rollout status deploy/{{ include "final-app.fullname" . }}
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "final-app.fullname" . }} 8080:{{ .Values.service.port }}
+  curl localhost:8080/healthz
+{{- if .Values.ingress.enabled }}
+Ingress (class {{ .Values.ingress.className }}): {{ range .Values.ingress.hosts }}http://{{ .host }} {{ end }}
+{{- end }}

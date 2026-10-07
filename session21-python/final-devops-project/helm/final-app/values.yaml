@@ -1,0 +1,116 @@
+# Default values for final-app (dev / CI). values-prod.yaml overrides the
+# few things that change in production.
+
+replicaCount: 2
+
+image:
+  # The pipeline overrides repository + tag with the image it just pushed:
+  #   --set image.tag=<git sha>
+  repository: ghcr.io/netram75/devops-heros-final
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# GHCR packages are private by default, so the pipeline creates this
+# docker-registry Secret in the namespace before installing the chart.
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  # The app never calls the Kubernetes API, so no token is mounted.
+  automount: false
+
+podAnnotations: {}
+
+# Plain settings, rendered into a ConfigMap and loaded with envFrom.
+config:
+  APP_ENV: dev
+  LOG_LEVEL: info
+
+# Sensitive settings, rendered into a Secret. This default is a FAKE demo
+# value so the chart installs out of the box. In a real environment it is
+# set at install time (--set secret.apiToken=...) or by an external secret
+# store, never committed.
+secret:
+  apiToken: "fake-demo-token-not-a-real-secret"
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: final-app.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 192Mi
+
+# Pod and container hardening. Same settings that passed the Session 17
+# Trivy misconfiguration scan: non-root numeric UID, read-only root
+# filesystem, no privilege escalation, every Linux capability dropped.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  privileged: false
+  capabilities:
+    drop: ["ALL"]
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: http
+  initialDelaySeconds: 2
+  periodSeconds: 5
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+# The app keeps its data in memory, so storage is off by default. When
+# enabled, a PVC is mounted at /data (for example for exported reports).
+persistence:
+  enabled: false
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  storageClassName: ""
+  mountPath: /data
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
