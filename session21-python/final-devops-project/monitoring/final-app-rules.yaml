@@ -1,0 +1,36 @@
+# Alert rules for the final project app. The kube-prometheus-stack values set
+# ruleSelectorNilUsesHelmValues=false, so Prometheus loads PrometheusRules from any
+# namespace without needing a "release: monitoring" label.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: final-app-rules
+  namespace: monitoring
+spec:
+  groups:
+    - name: final-app
+      rules:
+        - alert: FinalAppPodNotReady
+          # Covers the real app and the troubleshooting namespace.
+          expr: sum by (namespace, pod) (kube_pod_status_ready{namespace=~"final-app|final-troubleshoot", condition="false"}) > 0
+          for: 1m
+          labels: { severity: warning }
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has not been Ready for 1 minute"
+        - alert: FinalAppContainerRestarting
+          expr: increase(kube_pod_container_status_restarts_total{namespace=~"final-app|final-troubleshoot"}[10m]) > 2
+          for: 0m
+          labels: { severity: warning }
+          annotations:
+            summary: "Container {{ $labels.container }} in {{ $labels.namespace }}/{{ $labels.pod }} restarted more than twice in 10 minutes"
+        - alert: FinalAppHighCPU
+          # CPU used as a fraction of the CPU request, per pod (same base the HPA uses).
+          expr: |
+            sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{namespace="final-app", container="app"}[2m]))
+              /
+            sum by (namespace, pod) (kube_pod_container_resource_requests{namespace="final-app", container="app", resource="cpu"})
+              > 0.8
+          for: 1m
+          labels: { severity: warning }
+          annotations:
+            summary: "{{ $labels.pod }} is using {{ $value | humanizePercentage }} of its CPU request"
