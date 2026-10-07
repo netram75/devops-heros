@@ -1,0 +1,12 @@
+# The app keeps its data in memory, so the only thing worth persisting is the
+# gunicorn access log. Each pod writes <pod-name>-access.log here, so the logs
+# survive pod restarts and rescheduling (minikube's default hostpath StorageClass).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: final-app-logs
+spec:
+  accessModes: ["ReadWriteOnce"]   # single-node minikube, so all replicas can mount it
+  resources:
+    requests:
+      storage: 256Mi

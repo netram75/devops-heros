@@ -1,0 +1,29 @@
+# Minimal, non-HA Argo CD for a memory-constrained single-node minikube.
+dex:
+  enabled: false          # no SSO, I log in as admin
+notifications:
+  enabled: false
+applicationSet:
+  replicas: 0             # not needed for a single Application
+configs:
+  params:
+    server.insecure: true # plain HTTP behind kubectl port-forward
+  cm:
+    timeout.reconciliation: 30s        # poll Git every ~30s instead of 120s (demo only)
+    timeout.reconciliation.jitter: 5s
+controller:
+  resources:
+    requests: { cpu: 100m, memory: 192Mi }
+    limits: { memory: 512Mi }
+repoServer:
+  resources:
+    requests: { cpu: 20m, memory: 64Mi }
+    limits: { memory: 256Mi }
+server:
+  resources:
+    requests: { cpu: 20m, memory: 64Mi }
+    limits: { memory: 192Mi }
+redis:
+  resources:
+    requests: { cpu: 10m, memory: 16Mi }
+    limits: { memory: 64Mi }

@@ -1,0 +1,14 @@
+# Production overlay that Argo CD syncs. It reuses the plain manifests from
+# ../../../kubernetes as the base, so there is one source of truth for the app.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../../kubernetes
+patches:
+  # The replica count lives on the HPA (minReplicas), not on the Deployment,
+  # because the Deployment has no replicas field (the HPA owns it).
+  - target: { kind: HorizontalPodAutoscaler, name: final-app }
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
