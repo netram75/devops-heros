@@ -1,6 +1,7 @@
 # Gitleaks configuration for the Session 17 pipeline.
-# The pipeline scans the WHOLE git history of the repository, not just this folder:
-#   gitleaks git . --config session-17-devsecops/task/security/gitleaks.toml
+# The pipeline scans the WHOLE git history of the commit being built, not just
+# this folder and not just the latest diff:
+#   gitleaks git . --config session-17-devsecops/task/security/gitleaks.toml --log-opts="--full-history HEAD"
 title = "devops-heros session 17 gitleaks config"
 
 # Start from the full default rule set (AWS keys, GitHub tokens, private keys,
@@ -8,15 +9,37 @@ title = "devops-heros session 17 gitleaks config"
 [extend]
 useDefault = true
 
-# Allowlist ONLY the Session 12 course material. Those files teach Kubernetes
-# Secrets and contain base64 of throwaway demo passwords ("secretpassword",
-# "SuperSecureProductionPassword2026!"). My first full-history scan flagged 9
-# findings there, all from the course content, none from my own work. The task/
-# folder of every session is deliberately NOT allowlisted.
+# 1) Session 12 course material. Those files teach Kubernetes Secrets and contain
+#    base64 of throwaway demo passwords ("secretpassword",
+#    "SuperSecureProductionPassword2026!"). My first full-history scan flagged 9
+#    findings there, all from the course content. Only the two rules that fired
+#    are silenced, so a real AWS key or private key in these files would still fail.
 [[allowlists]]
 description = "Session 12 course material (demo Kubernetes Secret values)"
+targetRules = ["generic-api-key", "kubernetes-secret-yaml"]
 paths = [
   '''^session-12-ingress-configmaps-secrets/0[0-9]-[^/]+/''',
   '''^session-12-ingress-configmaps-secrets/lab\.md$''',
   '''^session-12-ingress-configmaps-secrets/instructor-notes[^/]*\.md$''',
 ]
+
+# 2) Session 12 task (already on main, commit e4d6b4d). Same lesson: demo Secret
+#    manifests whose header says every value is FAKE ("fake-Passw0rd-for-demo",
+#    "FAKE-API-KEY-0000-NOT-REAL"). Not on this branch yet, but this workflow also
+#    runs on main, where gate demo run 37656959433 showed these 13 findings.
+[[allowlists]]
+description = "Session 12 task demo Secret manifests (values marked FAKE in the files)"
+targetRules = ["generic-api-key", "kubernetes-secret-yaml"]
+paths = ['''^session-12-ingress-configmaps-secrets/task/''']
+
+# 3) Security gate demo. Commit 7d46976 added a random string in AWS access key
+#    format on purpose, to prove the gate blocks it. It was never issued by AWS,
+#    so there is nothing to rotate. Reverting the commit removed it from the code
+#    but NOT from history, so the gate kept failing (run 37657715475) until this
+#    exact commit + file + rule combination was allowlisted. All three must match.
+[[allowlists]]
+description = "Gate demo commit 7d46976: fake AWS-format key, never issued"
+condition = "AND"
+targetRules = ["aws-access-token"]
+commits = ["7d469760dbfb8ab8b24487cf8b989240d3420b67"]
+paths = ['''^session-17-devsecops/task/app/diagnostics\.py$''']
