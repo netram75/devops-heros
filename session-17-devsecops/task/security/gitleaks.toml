@@ -1,0 +1,22 @@
+# Gitleaks configuration for the Session 17 pipeline.
+# The pipeline scans the WHOLE git history of the repository, not just this folder:
+#   gitleaks git . --config session-17-devsecops/task/security/gitleaks.toml
+title = "devops-heros session 17 gitleaks config"
+
+# Start from the full default rule set (AWS keys, GitHub tokens, private keys,
+# generic high-entropy API keys, Kubernetes Secret manifests, ...).
+[extend]
+useDefault = true
+
+# Allowlist ONLY the Session 12 course material. Those files teach Kubernetes
+# Secrets and contain base64 of throwaway demo passwords ("secretpassword",
+# "SuperSecureProductionPassword2026!"). My first full-history scan flagged 9
+# findings there, all from the course content, none from my own work. The task/
+# folder of every session is deliberately NOT allowlisted.
+[[allowlists]]
+description = "Session 12 course material (demo Kubernetes Secret values)"
+paths = [
+  '''^session-12-ingress-configmaps-secrets/0[0-9]-[^/]+/''',
+  '''^session-12-ingress-configmaps-secrets/lab\.md$''',
+  '''^session-12-ingress-configmaps-secrets/instructor-notes[^/]*\.md$''',
+]
