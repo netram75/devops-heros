@@ -1,7 +1,0 @@
-# Throwaway object, removed from Git later to show Argo CD pruning it.
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: legacy-config
-data:
-  feature.old-banner: "true"

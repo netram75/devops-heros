@@ -3,7 +3,6 @@ kind: Kustomization
 namespace: s20-gitops
 resources:
   - ../../base
-  - legacy-config.yaml
 replicas:
   - name: podinfo
     count: 3
