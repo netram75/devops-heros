@@ -22,7 +22,7 @@ Update the status column as you go.
 | 13 | Kubernetes Storage, HPA & Probes | [folder](session-13-storage-hpa-probes/) | [task](session-13-storage-hpa-probes/task/) | done |
 | 14 | Kubernetes Troubleshooting | [README.md](session-14-kubernetes-troubleshooting/README.md) | [task](session-14-kubernetes-troubleshooting/task/) | done |
 | 15 | Helm | [README.md](session-15-helm/README.md) | [task](session-15-helm/task/) | done |
-| 16 | CI/CD & GitHub Actions | [folder](session-16-github-actions/) | [task](session-16-github-actions/task/) | not started |
+| 16 | CI/CD & GitHub Actions | [folder](session-16-github-actions/) | [task](session-16-github-actions/task/) | done |
 | 17 | Complete CI/CD & DevSecOps | [folder](session-17-devsecops/) | [task](session-17-devsecops/task/) | not started |
 | 18 | Terraform & Infrastructure as Code | [Readme.md](session18-terraform-iac/Readme.md) | [task](session18-terraform-iac/task/) | done |
 | 19 | Cloud & Terraform in Action | [folder](session19-cloud-terraform/) | [task](session19-cloud-terraform/task/) | done |
