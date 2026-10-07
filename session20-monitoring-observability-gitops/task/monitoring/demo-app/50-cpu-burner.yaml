@@ -1,0 +1,16 @@
+# Deliberately CPU-hungry pod, applied only to make DemoPodHighCPU fire.
+# The 250m limit keeps it from hurting the rest of the shared node.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cpu-burner
+  namespace: s20-monitoring-demo
+  labels: { app: cpu-burner }
+spec:
+  containers:
+    - name: burn
+      image: busybox:1.37
+      command: ["/bin/sh", "-c", "echo burning CPU; while true; do :; done"]
+      resources:
+        requests: { cpu: 50m, memory: 8Mi }
+        limits: { cpu: 250m, memory: 16Mi }

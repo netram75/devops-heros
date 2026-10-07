@@ -1,0 +1,29 @@
+# Sends a steady trickle of requests to podinfo so request-rate graphs have data.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadgen
+  namespace: s20-monitoring-demo
+  labels: { app: loadgen }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: loadgen }
+  template:
+    metadata:
+      labels: { app: loadgen }
+    spec:
+      containers:
+        - name: curl
+          image: curlimages/curl:8.16.0
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              while true; do
+                curl -s -o /dev/null http://podinfo:9898/
+                curl -s -o /dev/null http://podinfo:9898/status/500
+                sleep 0.5
+              done
+          resources:
+            requests: { cpu: 5m, memory: 8Mi }
+            limits: { cpu: 50m, memory: 32Mi }

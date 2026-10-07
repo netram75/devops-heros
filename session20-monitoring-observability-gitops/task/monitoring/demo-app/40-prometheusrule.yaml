@@ -1,0 +1,35 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: s20-demo-alerts
+  namespace: s20-monitoring-demo
+  labels:
+    release: monitoring
+spec:
+  groups:
+    - name: s20-demo.rules
+      rules:
+        - alert: DemoPodHighCPU
+          expr: |
+            sum by (namespace, pod) (
+              rate(container_cpu_usage_seconds_total{namespace="s20-monitoring-demo", container!=""}[1m])
+            ) > 0.15
+          for: 1m
+          labels: { severity: warning, team: netram }
+          annotations:
+            summary: "Pod {{ $labels.pod }} is using {{ $value | printf \"%.2f\" }} CPU cores"
+            description: "CPU above 0.15 cores for 1 minute in s20-monitoring-demo."
+        - alert: DemoPodRestarting
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="s20-monitoring-demo"}[5m]) > 0
+          labels: { severity: warning, team: netram }
+          annotations:
+            summary: "Container {{ $labels.container }} in {{ $labels.pod }} restarted in the last 5m"
+        - alert: DemoAppDown
+          expr: |
+            sum(up{namespace="s20-monitoring-demo", service="podinfo"}) == 0
+              or absent(up{namespace="s20-monitoring-demo", service="podinfo"})
+          for: 30s
+          labels: { severity: critical, team: netram }
+          annotations:
+            summary: "No podinfo target is up: the app is down"
