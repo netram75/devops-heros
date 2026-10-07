@@ -1,0 +1,26 @@
+#!/bin/bash
+# First-boot script for the single-node k3s host (Amazon Linux 2023).
+# Runs once as root through cloud-init. Output goes to /var/log/k3s-bootstrap.log.
+set -euo pipefail
+exec > >(tee -a /var/log/k3s-bootstrap.log) 2>&1
+
+echo "[bootstrap] environment=${environment} k3s=${k3s_version}"
+
+dnf -y update
+dnf -y install curl tar
+
+# Pinned k3s version so a rebuilt host gets the same Kubernetes release.
+# k3s ships Traefik as the ingress controller on 80/443.
+curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="${k3s_version}" sh -s - server \
+  --write-kubeconfig-mode 0640 \
+  --tls-san "$(curl -s -H "X-aws-ec2-metadata-token: $(curl -s -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 60')" http://169.254.169.254/latest/meta-data/public-ipv4)"
+
+# Wait for the node to report Ready before deploying anything.
+until /usr/local/bin/k3s kubectl get nodes 2>/dev/null | grep -q ' Ready'; do sleep 5; done
+
+# Smoke deployment of the app image from GHCR. The real manifests and Helm
+# chart are applied later by the CD pipeline / Argo CD.
+/usr/local/bin/k3s kubectl create namespace app --dry-run=client -o yaml | /usr/local/bin/k3s kubectl apply -f -
+/usr/local/bin/k3s kubectl -n app create deployment web --image="${app_image}" --dry-run=client -o yaml | /usr/local/bin/k3s kubectl apply -f -
+
+echo "[bootstrap] done; artifacts bucket: ${bucket}"
