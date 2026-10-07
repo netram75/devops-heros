@@ -8,6 +8,8 @@ on:
     branches: [main, session16-cicd]
     paths:
       - "session-16-github-actions/task/**"
+      - "!session-16-github-actions/task/**/*.md"
+      - "!session-16-github-actions/task/screenshots/**"
       - ".github/workflows/session16-ci.yml"
       - ".github/workflows/session16-cd.yml"
   workflow_dispatch:
