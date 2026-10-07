@@ -27,6 +27,7 @@ Update the status column as you go.
 | 18 | Terraform & Infrastructure as Code | [Readme.md](session18-terraform-iac/Readme.md) | [task](session18-terraform-iac/task/) | done |
 | 19 | Cloud & Terraform in Action | [folder](session19-cloud-terraform/) | [task](session19-cloud-terraform/task/) | done |
 | 20 | Monitoring, Observability & GitOps | [folder](session20-monitoring-observability-gitops/) | [task](session20-monitoring-observability-gitops/task/) | done |
+| 21 | Final DevOps Project | [README.md](session21-python/README.md) | [project](session21-python/final-devops-project/) | in progress |
 
 ## How this repo is organised
 
