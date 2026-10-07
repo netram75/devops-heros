@@ -6,7 +6,7 @@ resources:
   - legacy-config.yaml
 replicas:
   - name: podinfo
-    count: 2
+    count: 3
 images:
   - name: ghcr.io/stefanprodan/podinfo
-    newTag: 6.9.1
+    newTag: 6.9.2
