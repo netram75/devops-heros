@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: s14-triage
+  name: fail-2-imagepull-pod
+  labels:
+    tier: triage-gauntlet
+    scenario: imagepull
+spec:
+  containers:
+    - name: web-app
+      # FIX: yatri-api-service does not exist in any registry I can reach.
+      # Use an image + tag that really exists (nginx:1.27 stands in for the real app image).
+      image: nginx:1.27
+      resources:
+        requests: {cpu: 10m, memory: 16Mi}

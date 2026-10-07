@@ -20,7 +20,7 @@ Update the status column as you go.
 | 11 | Kubernetes Networking & Services | [README.md](session-11-kubernetes-services/README.md) | [task](session-11-kubernetes-services/task/) | done |
 | 12 | Kubernetes Ingress, ConfigMaps & Secrets | [README.md](session-12-ingress-configmaps-secrets/README.md) | [task](session-12-ingress-configmaps-secrets/task/) | done |
 | 13 | Kubernetes Storage, HPA & Probes | [folder](session-13-storage-hpa-probes/) | [task](session-13-storage-hpa-probes/task/) | not started |
-| 14 | Kubernetes Troubleshooting | [README.md](session-14-kubernetes-troubleshooting/README.md) | [task](session-14-kubernetes-troubleshooting/task/) | not started |
+| 14 | Kubernetes Troubleshooting | [README.md](session-14-kubernetes-troubleshooting/README.md) | [task](session-14-kubernetes-troubleshooting/task/) | done |
 | 15 | Helm | [README.md](session-15-helm/README.md) | [task](session-15-helm/task/) | done |
 | 16 | CI/CD & GitHub Actions | [folder](session-16-github-actions/) | [task](session-16-github-actions/task/) | not started |
 | 17 | Complete CI/CD & DevSecOps | [folder](session-17-devsecops/) | [task](session-17-devsecops/task/) | not started |

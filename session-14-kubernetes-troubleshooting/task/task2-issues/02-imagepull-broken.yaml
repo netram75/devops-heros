@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+
+metadata:
+  namespace: s14-t2
+  name: image-demo
+
+spec:
+  containers:
+    - name: app
+      image: nginx:this-image-does-not-exist

@@ -1,0 +1,19 @@
+# Pod overrides DNS with dnsPolicy None and points at a nameserver that does not exist
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: s14-t2-client
+  name: dns-bad
+spec:
+  dnsPolicy: "None"
+  dnsConfig:
+    nameservers:
+      - 10.96.0.99              # BUG: nothing listens here (CoreDNS is 10.96.0.10)
+    searches:
+      - s14-t2-client.svc.cluster.local
+  containers:
+    - name: client
+      image: registry.k8s.io/e2e-test-images/agnhost:2.39
+      command: ["sleep", "3600"]
+      resources:
+        requests: {cpu: 10m, memory: 16Mi}
