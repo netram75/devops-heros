@@ -1,0 +1,8 @@
+# Revision 3: another image and page change
+replicaCount: 2
+image:
+  tag: "1.27"
+page:
+  version: "v3"
+  message: "Hello from version 3"
+  color: "darkorange"

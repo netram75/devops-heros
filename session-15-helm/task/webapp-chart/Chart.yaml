@@ -1,0 +1,6 @@
+apiVersion: v2
+name: webapp
+description: Small nginx web page used to practise the Helm install / upgrade / rollback workflow
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

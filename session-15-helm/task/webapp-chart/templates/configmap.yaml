@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "webapp.fullname" . }}-page
+  labels:
+    {{- include "webapp.labels" . | nindent 4 }}
+data:
+  index.html: |
+    <html><body style="background:{{ .Values.page.color }}">
+    <h1>{{ .Values.page.message }}</h1>
+    <p>page={{ .Values.page.version }} image={{ .Values.image.tag }} release={{ .Release.Name }} rendered-at-revision={{ .Release.Revision }}</p>
+    </body></html>

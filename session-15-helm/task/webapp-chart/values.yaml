@@ -1,0 +1,25 @@
+# Default values (revision 1 of the rollback workflow)
+replicaCount: 1
+
+image:
+  repository: nginx
+  tag: "1.24-alpine"
+  pullPolicy: IfNotPresent
+
+# Text served on the home page. Changing it changes the ConfigMap,
+# and the checksum annotation in the Deployment makes the pods roll.
+page:
+  version: "v1"
+  message: "Hello from version 1"
+  color: "steelblue"
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 16Mi
+  limits:
+    memory: 64Mi
