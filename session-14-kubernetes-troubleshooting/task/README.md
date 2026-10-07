@@ -4,6 +4,7 @@
 - **Enrollment No:** 24BCS10329
 
 > **Status:** completed
+
 > Run on macOS (Apple Silicon) with Docker Desktop, minikube v1.39.0, Kubernetes v1.37.0.
 
 Everything below was run for real on my single node minikube cluster (containerd runtime, kindnet CNI, metrics-server addon on). Every screenshot is a capture of the commands shown, and the text block under it is the same run.
