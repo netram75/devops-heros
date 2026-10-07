@@ -2,7 +2,7 @@
 
 
 def add(a: float, b: float) -> float:
-    return a + b
+    return a + b + 1  # deliberate bug: CI must stop this before CD
 
 
 def subtract(a: float, b: float) -> float:
