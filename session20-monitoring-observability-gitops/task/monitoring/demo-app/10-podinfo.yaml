@@ -1,0 +1,42 @@
+# podinfo: a tiny Go web app that exposes Prometheus metrics on /metrics,
+# health on /healthz and readiness on /readyz.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: podinfo
+  namespace: s20-monitoring-demo
+  labels: { app: podinfo }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: podinfo }
+  template:
+    metadata:
+      labels: { app: podinfo }
+    spec:
+      containers:
+        - name: podinfo
+          image: ghcr.io/stefanprodan/podinfo:6.9.2
+          command: ["./podinfo", "--port=9898", "--level=info"]
+          ports:
+            - { name: http, containerPort: 9898 }
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 5
+          readinessProbe:
+            httpGet: { path: /readyz, port: http }
+            periodSeconds: 5
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { cpu: 200m, memory: 64Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: podinfo
+  namespace: s20-monitoring-demo
+  labels: { app: podinfo }
+spec:
+  selector: { app: podinfo }
+  ports:
+    - { name: http, port: 9898, targetPort: http }

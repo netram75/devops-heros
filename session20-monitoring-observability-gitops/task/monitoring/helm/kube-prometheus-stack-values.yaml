@@ -1,0 +1,76 @@
+# Lean kube-prometheus-stack values for a single-node minikube that shares
+# a small Docker VM with other clusters. Release name must be "monitoring".
+fullnameOverride: monitoring
+
+# minikube does not expose these on reachable addresses, scraping them only
+# produces permanently-down targets and noisy alerts.
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+defaultRules:
+  rules:
+    etcd: false
+    kubeControllerManager: false
+    kubeSchedulerAlerting: false
+    kubeSchedulerRecording: false
+    kubeProxy: false
+
+prometheus:
+  prometheusSpec:
+    retention: 2h
+    scrapeInterval: 15s
+    evaluationInterval: 15s
+    # pick up ServiceMonitors / PrometheusRules from any namespace
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    resources:
+      requests: { cpu: 100m, memory: 300Mi }
+      limits: { memory: 800Mi }
+    # no storageSpec -> emptyDir, nothing persistent
+
+alertmanager:
+  alertmanagerSpec:
+    resources:
+      requests: { cpu: 10m, memory: 32Mi }
+      limits: { memory: 96Mi }
+
+grafana:
+  persistence:
+    enabled: false
+  resources:
+    requests: { cpu: 50m, memory: 192Mi }
+    limits: { memory: 512Mi }   # 300Mi got OOMKilled on the first dashboard load
+  env:
+    # Go does not read the cgroup limit by itself; without this the heap grew
+    # past 512Mi and the container was OOMKilled a second time.
+    GOMEMLIMIT: 360MiB
+  sidecar:
+    resources:
+      requests: { cpu: 10m, memory: 48Mi }
+      limits: { memory: 128Mi }
+
+prometheusOperator:
+  resources:
+    requests: { cpu: 20m, memory: 64Mi }
+    limits: { memory: 160Mi }
+  admissionWebhooks:
+    patch:
+      resources:
+        requests: { cpu: 10m, memory: 32Mi }
+
+kube-state-metrics:
+  resources:
+    requests: { cpu: 10m, memory: 32Mi }
+    limits: { memory: 96Mi }
+
+prometheus-node-exporter:
+  resources:
+    requests: { cpu: 10m, memory: 24Mi }
+    limits: { memory: 64Mi }
