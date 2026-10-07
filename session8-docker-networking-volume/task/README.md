@@ -5,7 +5,11 @@
 
 > **Status:** completed
 
-> Run on Docker Engine 29.2.1 (Docker Desktop, WSL2 backend) on Windows 11.
+> Tasks 2 and 4 are from my original run on Docker Engine 29.2.1 (Docker Desktop, WSL2 backend)
+> on Windows 11. Tasks 1 and 3 were re-done on macOS 26.5.2 (Apple Silicon, arm64) with Docker
+> Desktop, Docker Engine 29.6.2, so that they match the assignment exactly: a frontend, backend
+> and MySQL database for Task 1, and a "Hello students" page for Task 3. All container and
+> network names in those two tasks are prefixed `netram-s8-`.
 
 ---
 
@@ -13,91 +17,210 @@
 
 ### What the task asked
 
-Create three bridge networks, place three containers so that one of them bridges two networks,
-and prove which containers can reach each other.
+Create three containers, Frontend, Backend and Database. Use Nginx or Alpine for the frontend and
+backend and the MySQL image for the database. Create three different Docker networks, add the
+backend container to two of them, and check connectivity between the containers.
 
 ### My approach
 
-The interesting question is not "can two containers on the same network talk", it is what happens
-to a container that is *two hops away* through a container attached to both networks. So I set up
-a deliberate chain: `c1` and `c2` share one network, `c2` and `c3` share another, and `c1` and
-`c3` share nothing. If Docker routed between bridge networks, `c1` would reach `c3` through `c2`.
+I built it the way a real three tier app is isolated. The backend is the only container allowed to
+talk to both sides, so it is the one that joins two networks:
+
+| Network | Members | Purpose |
+|---|---|---|
+| `netram-s8-frontend-net` | frontend, backend | web tier talks to the API tier |
+| `netram-s8-db-net` | backend, database | only the API tier can reach MySQL |
+| `netram-s8-backend-net` | none of the three | spare network for backend side helpers (workers, cache), used here as an isolation control |
+
+With three containers, three networks and only the backend on two networks, the third network
+cannot share a member with the other two without breaking the isolation, so I kept
+`netram-s8-backend-net` as a separate segment and used it to prove that a container sitting on it
+cannot see any of the three.
 
 ### Setup
 
 ```bash
-docker network create net1
-docker network create net2
-docker network create net3
+docker network create netram-s8-frontend-net
+docker network create netram-s8-backend-net
+docker network create netram-s8-db-net
 
-docker run -d --name c1 --network net1 alpine sleep 3600
-docker run -d --name c2 --network net1 alpine sleep 3600
-docker network connect net2 c2          # c2 now sits on both net1 and net2
-docker run -d --name c3 --network net2 alpine sleep 3600
-docker network connect net3 c3
+docker run -d --name netram-s8-frontend --network netram-s8-frontend-net -p 18880:80 nginx:alpine
+docker run -d --name netram-s8-backend  --network netram-s8-frontend-net alpine sleep 7200
+docker network connect netram-s8-db-net netram-s8-backend     # backend now on 2 networks
+docker run -d --name netram-s8-database --network netram-s8-db-net \
+  -e MYSQL_ROOT_PASSWORD=demo-root-pw -e MYSQL_DATABASE=school \
+  --health-cmd 'mysqladmin ping -h 127.0.0.1 -uroot -pdemo-root-pw --silent' \
+  --health-interval 3s --health-retries 60 mysql:8.4
 ```
+
+`demo-root-pw` is a throwaway demo password for a local container that was deleted afterwards.
+
+![Creating the three networks and three containers](screenshots/task1-setup.png)
+
+```text
+$ # wait until MySQL reports healthy
+netram-s8-database is healthy after ~26s
+
+$ docker ps --filter name=netram-s8- --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+NAMES                IMAGE          STATUS                    PORTS
+netram-s8-database   mysql:8.4      Up 26 seconds (healthy)   3306/tcp, 33060/tcp
+netram-s8-backend    alpine         Up 26 seconds             
+netram-s8-frontend   nginx:alpine   Up 27 seconds             0.0.0.0:18880->80/tcp, [::]:18880->80/tcp
+```
+
+I waited for the MySQL health check to pass before testing. MySQL takes a while to initialise on
+first start, and a port check against a half started database would have told me nothing.
+
+### Networks and membership
+
+![Networks, subnets and which container is on which](screenshots/task1-networks.png)
+
+```text
+$ docker network ls --filter name=netram-s8 --format 'table {{.Name}}\t{{.Driver}}\t{{.Scope}}'
+NAME                     DRIVER    SCOPE
+netram-s8-backend-net    bridge    local
+netram-s8-db-net         bridge    local
+netram-s8-frontend-net   bridge    local
+
+$ for n in netram-s8-frontend-net netram-s8-backend-net netram-s8-db-net; do docker network inspect -f '{{.Name}}  subnet={{range .IPAM.Config}}{{.Subnet}}{{end}}  containers=[{{range .Containers}}{{.Name}} {{end}}]' $n; done
+netram-s8-frontend-net  subnet=172.20.0.0/16  containers=[netram-s8-frontend netram-s8-backend ]
+netram-s8-backend-net  subnet=172.21.0.0/16  containers=[]
+netram-s8-db-net  subnet=172.22.0.0/16  containers=[netram-s8-database netram-s8-backend ]
+
+$ docker inspect -f '{{.Name}} -> {{range $k,$v := .NetworkSettings.Networks}}{{$k}}={{$v.IPAddress}}  {{end}}' netram-s8-frontend netram-s8-backend netram-s8-database
+/netram-s8-frontend -> netram-s8-frontend-net=172.20.0.2  
+/netram-s8-backend -> netram-s8-db-net=172.22.0.2  netram-s8-frontend-net=172.20.0.3  
+/netram-s8-database -> netram-s8-db-net=172.22.0.3
+```
+
+Each network got its own subnet. The backend has two IP addresses, one per network, because it is
+attached to two networks. The frontend and the database each have one, on networks they do not
+share.
 
 ### Connectivity results
 
-![Three bridge networks and who can reach whom](screenshots/task1-connectivity.png)
+![Connectivity between frontend, backend and database](screenshots/task1-connectivity.png)
+
+I appended `; echo exit=$?` to each test so the exit code is recorded next to the output.
+
+Frontend and backend (shared `netram-s8-frontend-net`):
 
 ```text
-$ docker network ls --filter name=net --format 'table {{.Name}}\t{{.Driver}}\t{{.Scope}}'
-NAME      DRIVER    SCOPE
-net1      bridge    local
-net2      bridge    local
-net3      bridge    local
+$ docker exec netram-s8-frontend ping -c 2 netram-s8-backend
+PING netram-s8-backend (172.20.0.3): 56 data bytes
+64 bytes from 172.20.0.3: seq=0 ttl=64 time=0.194 ms
+64 bytes from 172.20.0.3: seq=1 ttl=64 time=0.717 ms
 
-$ docker inspect -f '{{.Name}} : {{range $k,$v := .NetworkSettings.Networks}}{{$k}}={{$v.IPAddress}} {{end}}' c1 c2 c3
-/c1 : net1=172.19.0.2
-/c2 : net1=172.19.0.3 net2=172.20.0.2
-/c3 : net2=172.20.0.3 net3=172.21.0.2
+--- netram-s8-backend ping statistics ---
+2 packets transmitted, 2 packets received, 0% packet loss
+round-trip min/avg/max = 0.194/0.455/0.717 ms
+exit=0
+
+$ docker exec netram-s8-backend ping -c 2 netram-s8-frontend
+PING netram-s8-frontend (172.20.0.2): 56 data bytes
+64 bytes from 172.20.0.2: seq=0 ttl=64 time=0.128 ms
+64 bytes from 172.20.0.2: seq=1 ttl=64 time=2.907 ms
+
+--- netram-s8-frontend ping statistics ---
+2 packets transmitted, 2 packets received, 0% packet loss
+round-trip min/avg/max = 0.128/1.517/2.907 ms
+exit=0
+
+$ docker exec netram-s8-backend wget -qO- http://netram-s8-frontend | grep title
+<title>Welcome to nginx!</title>
+exit=0
 ```
 
-Each network got its own subnet: `172.19.0.0/16`, `172.20.0.0/16`, `172.21.0.0/16`. `c2` has two
-addresses because it is attached to two networks, and `c3` has two for the same reason.
+Backend and database (shared `netram-s8-db-net`), at three levels: ICMP, the MySQL TCP port, and a
+real SQL query:
 
 ```text
---- c1 -> c2  (both on net1) ---
-PING c2 (172.19.0.3): 56 data bytes
-64 bytes from 172.19.0.3: seq=0 ttl=64 time=1.727 ms
-64 bytes from 172.19.0.3: seq=1 ttl=64 time=0.106 ms
+$ docker exec netram-s8-backend ping -c 2 netram-s8-database
+PING netram-s8-database (172.22.0.3): 56 data bytes
+64 bytes from 172.22.0.3: seq=0 ttl=64 time=0.240 ms
+64 bytes from 172.22.0.3: seq=1 ttl=64 time=1.401 ms
+
+--- netram-s8-database ping statistics ---
 2 packets transmitted, 2 packets received, 0% packet loss
+round-trip min/avg/max = 0.240/0.820/1.401 ms
 exit=0
 
---- c2 -> c3  (both on net2) ---
-PING c3 (172.20.0.3): 56 data bytes
-64 bytes from 172.20.0.3: seq=0 ttl=64 time=0.918 ms
-64 bytes from 172.20.0.3: seq=1 ttl=64 time=0.138 ms
-2 packets transmitted, 2 packets received, 0% packet loss
+$ docker exec netram-s8-backend nc -zv -w 3 netram-s8-database 3306
+netram-s8-database (172.22.0.3:3306) open
 exit=0
 
---- c1 -> c3  (no shared network, c2 bridges them) ---
-ping: bad address 'c3'
+$ docker run --rm --network container:netram-s8-backend -e MYSQL_PWD=*** mysql:8.4 mysql -h netram-s8-database -uroot -e "SELECT @@hostname AS db_host, VERSION() AS version; SHOW DATABASES LIKE 'school';"
+db_host	version
+0eb843942ae2	8.4.11
+Database (school)
+school
+exit=0
+```
+
+The backend is plain Alpine and has no MySQL client, so for the query I ran a one off `mysql:8.4`
+client container with `--network container:netram-s8-backend`. That flag makes it share the
+backend's network namespace, so the query really leaves from the backend's interfaces and uses
+the backend's view of DNS. `db_host` came back as `0eb843942ae2`, the ID of the database container,
+and the `school` database I asked for at startup exists.
+
+Frontend and database (no shared network):
+
+```text
+$ docker exec netram-s8-frontend ping -c 2 -W 2 netram-s8-database
+ping: bad address 'netram-s8-database'
 exit=1
+
+$ docker exec netram-s8-frontend nc -zv -w 3 netram-s8-database 3306
+nc: bad address 'netram-s8-database'
+exit=1
+
+$ DBIP=$(docker inspect -f '{{(index .NetworkSettings.Networks "netram-s8-db-net").IPAddress}}' netram-s8-database)
+docker exec netram-s8-frontend ping -c 2 -W 2 $DBIP
+DBIP=172.22.0.3
+PING 172.22.0.3 (172.22.0.3): 56 data bytes
+
+--- 172.22.0.3 ping statistics ---
+2 packets transmitted, 0 packets received, 100% packet loss
+exit=1
+```
+
+And a throwaway probe on the third network, `netram-s8-backend-net`:
+
+```text
+$ docker run --rm --name netram-s8-probe --network netram-s8-backend-net alpine sh -c 'for h in netram-s8-frontend netram-s8-backend netram-s8-database; do ping -c 1 -W 2 $h; echo "$h exit=$?"; done'
+ping: bad address 'netram-s8-frontend'
+netram-s8-frontend exit=1
+ping: bad address 'netram-s8-backend'
+netram-s8-backend exit=1
+ping: bad address 'netram-s8-database'
+netram-s8-database exit=1
 ```
 
 | From | To | Shared network | Result |
 |---|---|---|---|
-| `c1` | `c2` | net1 | reachable, 0% loss |
-| `c2` | `c3` | net2 | reachable, 0% loss |
-| `c1` | `c3` | none | **fails** |
+| frontend | backend | frontend-net | reachable, 0% loss |
+| backend | frontend | frontend-net | reachable, Nginx page served |
+| backend | database | db-net | reachable, port 3306 open, SQL query works |
+| frontend | database (by name) | none | **fails**, `bad address` |
+| frontend | database (by IP 172.22.0.3) | none | **fails**, 100% packet loss |
+| probe on backend-net | any of the three | none | **fails**, `bad address` |
 
-The failure mode is the part worth reading closely. It is not "request timed out" or
-"destination unreachable", it is **`bad address 'c3'`**. That is a **DNS** failure, not a routing
-failure. `c1` never got as far as sending a packet, because it could not turn the name `c3` into
-an address at all.
+Why the frontend cannot reach the database, even though the backend sits between them:
 
-That is Docker's embedded DNS server at work. Each user-defined bridge network has its own
-resolver scope, and a container can only resolve the names of containers that share a network
-with it. From `c1`'s point of view, `c3` does not exist as a name. `c2` being attached to both
-networks does not help: it is a member of each, not a router between them. Docker does not
-forward traffic between bridge networks by default, and each network is a separate Linux bridge
-with its own subnet and iptables rules.
+- **Name resolution.** Docker runs an embedded DNS server (at `127.0.0.11` inside each container)
+  and it only answers for containers that share a user defined network with the asker. The
+  frontend is only on `netram-s8-frontend-net`, so from its point of view `netram-s8-database`
+  does not exist as a name. That is why the error is `bad address`, not a timeout: the frontend
+  never got as far as sending a packet.
+- **Routing.** Even when I skipped DNS and pinged the database's real IP, 100% of packets were
+  lost. Each network is a separate Linux bridge with its own subnet, the frontend has no route
+  into `172.22.0.0/16` other than its default gateway, and Docker's isolation rules drop traffic
+  between different bridge networks.
+- **The backend is a member, not a router.** Being attached to both networks gives the backend an
+  interface on each, but it does not forward packets between them.
 
-This is the mechanism behind the standard way of isolating a database: put the app on both a
-`frontend` and a `backend` network, put the database on `backend` only, and the outside world
-physically cannot address the database even by name.
+This is the standard database isolation pattern: the database lives only on `db-net`, only the
+backend joins `db-net`, and the frontend cannot address the database by name or by IP.
 
 ---
 
@@ -178,63 +301,92 @@ because there the host and the Docker host are the same machine.
 
 ### What the task asked
 
-Mount a local folder into an Nginx container, then change a file on the host and confirm the
-change is served without restarting the container.
+Create a folder on the local machine with an `index.html` containing "Hello students", bind mount
+the folder into an Nginx container, open the site and verify the content, then modify `index.html`
+and verify the change is served without restarting the container.
 
 ### Commands
 
 ```bash
 mkdir -p bind-mount-data
-echo '<h1>Hello from the host filesystem</h1>' > bind-mount-data/index.html
+printf '<h1>Hello students</h1>\n' > bind-mount-data/index.html
 
-docker run -d --name nginx-bind-mount -p 8088:80 \
-  -v C:/Users/Netram12/devops-heros/session8-docker-networking-volume/task/bind-mount-data:/usr/share/nginx/html \
-  nginx:alpine
+docker run -d --name netram-s8-nginx-bind -p 18881:80 \
+  -v "$(pwd)/bind-mount-data":/usr/share/nginx/html:ro nginx:alpine
 ```
 
-### Verification
+I mounted it read only (`:ro`). The container only needs to read the page, and this way Nginx
+cannot write back into my real folder.
 
-![Editing a host file and seeing it served with no restart](screenshots/task3-bind-mount.png)
+### Verification, before the edit
+
+![Bind mounting the folder and serving Hello students](screenshots/task3-before.png)
 
 ```text
-$ docker inspect -f '{{range .Mounts}}type={{.Type}}  source={{.Source}}  dest={{.Destination}}  rw={{.RW}}{{end}}' nginx-bind-mount
-type=bind  source=C:/Users/Netram12/devops-heros/session8-docker-networking-volume/task/bind-mount-data  dest=/usr/share/nginx/html  rw=true
+$ cat bind-mount-data/index.html
+<h1>Hello students</h1>
+
+$ docker inspect -f '{{range .Mounts}}type={{.Type}}  dest={{.Destination}}  rw={{.RW}}  source={{.Source}}{{end}}' netram-s8-nginx-bind | sed "s#$(pwd)#\$(pwd)#"
+type=bind  dest=/usr/share/nginx/html  rw=false  source=$(pwd)/bind-mount-data
+
+$ sleep 1; curl -s http://localhost:18881
+<h1>Hello students</h1>
+
+$ docker ps --filter name=netram-s8-nginx-bind --format 'table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}'
+CONTAINER ID   NAMES                  STATUS        PORTS
+15e214c41e5e   netram-s8-nginx-bind   Up 1 second   0.0.0.0:18881->80/tcp, [::]:18881->80/tcp
+
+$ docker inspect -f 'StartedAt={{.State.StartedAt}}  RestartCount={{.RestartCount}}' netram-s8-nginx-bind
+StartedAt=2026-10-07T17:53:11.988866469Z  RestartCount=0
 ```
 
-`type=bind` confirms this is a bind mount and not a named volume, and `rw=true` means the
-container could write back to my real folder if it wanted to.
+`type=bind` confirms a bind mount and not a named volume, and `rw=false` confirms the read only
+flag. The `sed` only shortens my long local folder path back to `$(pwd)` for readability.
+
+The same page in a browser:
+
+![Browser showing Hello students](screenshots/task3-browser-before.png)
+
+### Modify index.html on the host, no restart
+
+![Editing the host file and seeing it served by the same container](screenshots/task3-after.png)
 
 ```text
---- served before any edit ---
-<h1>Hello from the host filesystem</h1>
-<p>Version 1, written before the container started.</p>
+$ printf '<h1>Hello students</h1>\n<p>Edited on the host while the container kept running. No restart.</p>\n' > bind-mount-data/index.html
+
+$ cat bind-mount-data/index.html
+<h1>Hello students</h1>
+<p>Edited on the host while the container kept running. No restart.</p>
+
+$ # poll until the edit is served (Docker Desktop file sharing can lag slightly on macOS)
+edit visible to nginx after 0.04s
+
+$ curl -s http://localhost:18881
+<h1>Hello students</h1>
+<p>Edited on the host while the container kept running. No restart.</p>
+
+$ docker ps --filter name=netram-s8-nginx-bind --format 'table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}'
+CONTAINER ID   NAMES                  STATUS          PORTS
+15e214c41e5e   netram-s8-nginx-bind   Up 12 seconds   0.0.0.0:18881->80/tcp, [::]:18881->80/tcp
+
+$ docker inspect -f 'StartedAt={{.State.StartedAt}}  RestartCount={{.RestartCount}}' netram-s8-nginx-bind
+StartedAt=2026-10-07T17:53:11.988866469Z  RestartCount=0
 ```
 
-Now rewrite the file **on the host**, touching nothing in Docker:
+![Browser showing the edited page](screenshots/task3-browser-after.png)
 
-```text
-$ printf '<h1>Edited on the host, no restart</h1>\n...' > bind-mount-data/index.html
-host file rewritten
+The new line is served, and the container is provably the same one: same container ID
+`15e214c41e5e`, the same `StartedAt` timestamp to the nanosecond, `RestartCount=0`, and the uptime
+simply kept counting from `Up 1 second` to `Up 12 seconds`. I never restarted the container and
+never rebuilt the image.
 
---- served after the edit, container never restarted ---
-<h1>Edited on the host, no restart</h1>
-<p>Version 2, written while the container kept running.</p>
+This works because a bind mount is not a copy. The host directory is mounted into the container's
+mount namespace, so both sides are looking at the same files. Nginx opens
+`/usr/share/nginx/html/index.html` fresh on each request, so the next request simply reads the new
+bytes.
 
-$ docker ps --filter name=nginx-bind-mount --format 'table {{.Names}}\t{{.Status}}'
-NAMES              STATUS
-nginx-bind-mount   Up 5 seconds
-```
-
-New content, and `STATUS` still shows the original `Up`. The container was never restarted and
-the image was never rebuilt.
-
-This works because a bind mount is not a copy. The kernel mounts the host directory into the
-container's mount namespace, so both sides are looking at the same inodes on the same filesystem.
-Nginx opens `/usr/share/nginx/html/index.html` fresh on each request, so the next request simply
-reads the new bytes.
-
-The committed [`bind-mount-data/index.html`](bind-mount-data/index.html) is the version 2 file
-from that run.
+The committed [`bind-mount-data/index.html`](bind-mount-data/index.html) is the edited file from
+that run.
 
 | | Bind mount | Named volume |
 |---|---|---|
@@ -286,17 +438,19 @@ network membership is what grants reachability, applied at different scopes.
 
 ## What I learned overall
 
-- `bad address 'c3'` taught me more than a timeout would have. Docker isolates networks at the
-  **DNS** layer as well as the routing layer, so an unreachable container is not just filtered,
-  it is unnameable.
-- A container attached to two networks is a member of both, not a router between them. I expected
-  `c1` to reach `c3` through `c2` and it does not, which is exactly why the app-plus-database
-  isolation pattern is safe.
+- `bad address 'netram-s8-database'` taught me more than a timeout would have. Docker isolates
+  networks at the **DNS** layer as well as the routing layer, so the frontend cannot even name the
+  database, and pinging the database's raw IP fails too.
+- A container attached to two networks is a member of both, not a router between them. The
+  backend reaches both the frontend and MySQL, but the frontend still cannot reach MySQL through
+  it, which is exactly why the app plus database isolation pattern is safe.
+- "Reachable" has levels. Ping proves ICMP, `nc -zv` proves the MySQL port is open, and only a
+  real SQL query proves the database is actually usable from the backend.
 - `--net=host` means the *Docker* host. On Docker Desktop that is the WSL2 VM, not Windows, and
   the command that "should" work fails while the same command from inside another host-networked
   container succeeds. Understanding where the boundary sits mattered more than the flag itself.
-- A bind mount shares inodes rather than copying files, which is why a host edit appears
-  instantly with no restart and no rebuild.
+- A bind mount shares the host files rather than copying them, which is why a host edit appears
+  with no restart and no rebuild, and the container ID and start time prove it.
 
 ## Problems I hit
 
@@ -305,13 +459,29 @@ network membership is what grants reachability, applied at different scopes.
   model of "host" was wrong. Running a second container with `--net=host` and reaching Apache
   from there is what proved it, and turned a dead end into the most useful finding in this
   session.
-- **The bind mount silently served an Nginx welcome page** on my first attempt. I had passed a
-  Git Bash style path (`/c/Users/...`), Docker Desktop did not recognise it as an existing host
-  directory, and rather than erroring it mounted something empty. Switching to a Windows style
-  path (`C:/Users/...`) fixed it. `docker inspect` on `.Mounts` is the way to confirm what was
-  actually mounted rather than trusting the command line.
+- **MySQL is not ready the moment the container starts.** It needs about 25 seconds to initialise
+  on first boot. I added a `--health-cmd` with `mysqladmin ping` and waited for `(healthy)` before
+  running any connectivity checks, otherwise the port test could fail for the wrong reason.
+- **The backend image has no MySQL client.** Instead of installing one into the Alpine container,
+  I ran a temporary `mysql:8.4` client with `--network container:netram-s8-backend`, which shares
+  the backend's network namespace so the query genuinely comes from the backend.
+- **The third network had nothing obvious to do.** With three containers and only the backend on
+  two networks, one network is always left without a member. I kept `netram-s8-backend-net` as a
+  separate segment and used a throwaway probe on it to show that it is isolated from all three.
+- **On my first Task 3 attempt on the Mac, a curl fired immediately after the edit still returned
+  the old page.** Checking a few seconds later showed the new content, and the file inside the
+  container was already updated. Docker Desktop on macOS shares host folders into its Linux VM,
+  and that file sharing layer can lag very slightly behind a host write. For the final run I
+  polled until the edit appeared (it took 0.04s) before taking the result, instead of trusting a
+  single instant request.
+- **The bind mount silently served an Nginx welcome page** on my first Windows attempt. I had
+  passed a Git Bash style path (`/c/Users/...`), Docker Desktop did not recognise it as an
+  existing host directory, and rather than erroring it mounted something empty. `docker inspect`
+  on `.Mounts` is the way to confirm what was actually mounted rather than trusting the command
+  line, and I used it again on the Mac run.
 - **The empty `PORTS` column on the host-networked container looked like a bug.** It is correct
   and expected: with no NAT there is nothing to report. Passing `-p` alongside `--net=host` just
   gets ignored with a warning.
 - **Container name collisions** across repeated runs. Every setup step now starts with
-  `docker rm -f <name> 2>/dev/null` so a re-run is not blocked by the previous attempt.
+  `docker rm -f <name> 2>/dev/null` so a re-run is not blocked by the previous attempt, and I
+  removed all `netram-s8-` containers and networks when I was done.
