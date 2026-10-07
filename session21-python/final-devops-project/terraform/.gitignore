@@ -1,0 +1,13 @@
+# Never commit: downloaded providers, state, saved plans, crash logs
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+full-plan.txt
+
+# session21-python/.gitignore ignores the lock file. Here it is a deliverable
+# (it pins the exact provider builds), and terraform.tfvars holds no secrets.
+!.terraform.lock.hcl
+!terraform.tfvars
