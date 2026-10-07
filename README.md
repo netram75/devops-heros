@@ -16,7 +16,7 @@ Update the status column as you go.
 | 6–7 | Docker | [docker.md](session6-7-docker/docker.md) | [Task 1](session6-7-docker/task/) · [Task 2](session6-7-docker/Task-2/) | done |
 | 8 | Docker Networking & Volumes | [README.md](session8-docker-networking-volume/README.md) | [task](session8-docker-networking-volume/task/) | done |
 | 9 | Kubernetes Fundamentals | [Readme.md](session9-k8s/Readme.md) | [task](session9-k8s/task/) | done |
-| 10 | Kubernetes Pods, ReplicaSets & Deployments | [Readme.md](session10-k8s-core-objects/Readme.md) | [task](session10-k8s-core-objects/task/) | not started |
+| 10 | Kubernetes Pods, ReplicaSets & Deployments | [Readme.md](session10-k8s-core-objects/Readme.md) | [task](session10-k8s-core-objects/task/) | done |
 | 11 | Kubernetes Networking & Services | [README.md](session-11-kubernetes-services/README.md) | [task](session-11-kubernetes-services/task/) | not started |
 | 12 | Kubernetes Ingress, ConfigMaps & Secrets | [README.md](session-12-ingress-configmaps-secrets/README.md) | [task](session-12-ingress-configmaps-secrets/task/) | not started |
 | 13 | Kubernetes Storage, HPA & Probes | [folder](session-13-storage-hpa-probes/) | [task](session-13-storage-hpa-probes/task/) | not started |

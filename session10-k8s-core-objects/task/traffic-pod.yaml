@@ -1,0 +1,30 @@
+# Traffic generator I used to watch every deployment strategy from the inside.
+# It requests the Service 5 times a second and prints which version answered,
+# or FAIL if nothing answered within 1 second. TARGET_SVC is replaced with sed:
+#   sed 's/TARGET_SVC/app-rolling-service/' traffic-pod.yaml | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: traffic
+  labels:
+    role: traffic
+spec:
+  restartPolicy: Never
+  containers:
+    - name: curl
+      image: curlimages/curl:8.11.1
+      env:
+        - name: TARGET
+          value: TARGET_SVC
+      command: ["sh", "-c"]
+      args:
+        - |
+          while true; do
+            r=$(curl -s -m 1 "http://$TARGET/" | grep -oE 'VERSION: v[0-9]|BLUE|GREEN|STABLE v1|CANARY v2' | head -1)
+            echo "$(date +%H:%M:%S) ${r:-FAIL}"
+            sleep 0.2
+          done
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
