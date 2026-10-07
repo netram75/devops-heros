@@ -1,0 +1,19 @@
+# Env var comes from a ConfigMap key that does not exist -> CreateContainerConfigError
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: s14-t2
+  name: config-demo
+spec:
+  containers:
+    - name: app
+      image: busybox:1.36
+      command: ["sh", "-c", "echo APP_MODE=$APP_MODE; sleep 3600"]
+      env:
+        - name: APP_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: app-settings     # BUG: ConfigMap missing
+              key: mode
+      resources:
+        requests: {cpu: 10m, memory: 8Mi}

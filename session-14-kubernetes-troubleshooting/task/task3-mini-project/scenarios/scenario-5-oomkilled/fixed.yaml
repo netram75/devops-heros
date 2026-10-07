@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: s14-triage
+  name: fail-5-oomkilled-pod
+  labels:
+    tier: triage-gauntlet
+    scenario: oomkilled
+spec:
+  containers:
+    - name: memory-leaker
+      image: python:3.11-alpine
+      command:
+        - "python3"
+        - "-c"
+        - |
+          # FIX: bounded allocation (30MB) instead of 1000MB, and keep running
+          import time
+          print("Allocating a bounded amount of memory...", flush=True)
+          chunks = [b"x" * (10 * 1024 * 1024) for i in range(3)]
+          print("Allocated", sum(len(c) for c in chunks) // (1024 * 1024), "MB, staying up", flush=True)
+          time.sleep(3600)
+      resources:
+        requests:
+          memory: "48Mi"
+        limits:
+          memory: "64Mi"    # FIX: realistic limit above the app's real usage

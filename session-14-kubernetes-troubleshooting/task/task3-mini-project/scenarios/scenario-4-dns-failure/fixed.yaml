@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: s14-triage
+  name: fail-4-dns-failure-pod
+  labels:
+    tier: triage-gauntlet
+    scenario: dns-failure
+spec:
+  containers:
+    - name: client
+      image: curlimages/curl:8.6.0
+      command: ["sh", "-c"]
+      args:
+        - |
+          echo "Attempting connection to internal database...";
+          # FIX: correct service name + the namespace it really lives in, and stop hiding errors (-sS, no || true)
+          curl -sS --connect-timeout 3 -o /dev/null -w "connected, HTTP %{http_code}\n" http://postgres-db.s14-triage.svc.cluster.local:5432
+          echo "Process sleeping...";
+          sleep 3600
+      resources:
+        requests: {cpu: 10m, memory: 8Mi}

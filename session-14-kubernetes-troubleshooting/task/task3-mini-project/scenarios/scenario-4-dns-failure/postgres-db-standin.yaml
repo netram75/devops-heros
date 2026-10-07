@@ -1,0 +1,25 @@
+# Stand-in for the database the client wants to reach. It is nginx behind a Service
+# on port 5432, enough to prove DNS + TCP work (it is NOT a real PostgreSQL server).
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: s14-triage
+  name: postgres-db-standin
+  labels: {app: postgres-db}
+spec:
+  containers:
+    - name: db
+      image: nginx:1.25-alpine
+      resources:
+        requests: {cpu: 10m, memory: 8Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: s14-triage
+  name: postgres-db
+spec:
+  selector: {app: postgres-db}
+  ports:
+    - port: 5432
+      targetPort: 80

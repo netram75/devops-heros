@@ -1,0 +1,13 @@
+# Test client used to curl Services from another pod
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: s14-t2
+  name: client
+spec:
+  containers:
+    - name: client
+      image: registry.k8s.io/e2e-test-images/agnhost:2.39
+      command: ["sleep", "3600"]
+      resources:
+        requests: {cpu: 10m, memory: 16Mi}

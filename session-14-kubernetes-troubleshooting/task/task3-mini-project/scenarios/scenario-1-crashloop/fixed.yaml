@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: s14-triage
+  name: fail-1-crashloop-pod
+  labels:
+    tier: triage-gauntlet
+    scenario: crashloop
+spec:
+  containers:
+    - name: python-app
+      image: python:3.11-alpine
+      env:
+        - name: DATABASE_URL            # FIX 1: provide the variable the app needs
+          value: "postgres://app:app@postgres-db.s14-triage.svc.cluster.local:5432/app"
+      command:
+        - "python3"
+        - "-c"
+        - |
+          import os, sys, time
+          db_url = os.environ.get("DATABASE_URL")
+          if not db_url:
+              print("[FATAL ERROR]: DATABASE_URL environment variable is MISSING!", file=sys.stderr)
+              sys.exit(1)
+          print("Application started successfully!", flush=True)
+          while True:                   # FIX 2: a long-running app must not exit
+              time.sleep(3600)
+      resources:
+        requests: {cpu: 10m, memory: 16Mi}
+        limits: {memory: 64Mi}

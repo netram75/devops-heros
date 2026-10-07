@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: s14-t2
+  name: site-content
+data:
+  index.html: "hello from mount-demo (ConfigMap volume)\n"
