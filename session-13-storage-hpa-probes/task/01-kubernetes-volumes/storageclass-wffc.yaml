@@ -1,0 +1,9 @@
+# First attempt (did NOT work on minikube, see README): same minikube provisioner as
+# "standard", but reclaimPolicy Retain and volumeBindingMode WaitForFirstConsumer.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: s13-wffc
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer

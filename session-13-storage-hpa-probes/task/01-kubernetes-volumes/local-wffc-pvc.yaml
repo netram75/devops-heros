@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: local-wffc-pvc
+  namespace: s13-vol
+spec:
+  storageClassName: s13-local-wffc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 200Mi

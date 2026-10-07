@@ -1,0 +1,13 @@
+# Copied from 03-storageclass/pvc.yaml (namespace added).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dynamic-pvc
+  namespace: s13-vol
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 500Mi

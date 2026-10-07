@@ -1,0 +1,5 @@
+# Copied from mini-project/namespace.yaml; only the namespace changed (production-webapp -> s13-production-webapp).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: s13-production-webapp

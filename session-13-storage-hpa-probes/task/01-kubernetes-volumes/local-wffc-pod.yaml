@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: local-wffc-consumer
+  namespace: s13-vol
+spec:
+  containers:
+    - name: app
+      image: busybox:1.36
+      command: ["/bin/sh", "-c", "echo hello from the first consumer > /data/hello.txt; sleep 3600"]
+      resources:
+        requests: {cpu: 10m, memory: 8Mi}
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: local-wffc-pvc

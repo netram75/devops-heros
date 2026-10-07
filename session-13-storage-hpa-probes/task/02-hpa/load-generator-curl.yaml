@@ -1,0 +1,21 @@
+# Second run. The busybox wget generator starts one new process per request, so
+# the client burned ~400m CPU while nginx only used ~50-80m. curl with a URL
+# range reuses keep-alive connections (4 in parallel), so almost all the CPU is
+# spent by nginx answering requests. curl is already inside the nginx:1.27 image.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: load-generator-curl
+  namespace: s13-hpa
+spec:
+  restartPolicy: Never
+  containers:
+    - name: load
+      image: nginx:1.27
+      resources:
+        requests:
+          cpu: 50m
+          memory: 16Mi
+      command: ["/bin/sh", "-c"]
+      args:
+        - while true; do curl -s -Z --parallel-max 4 "http://hpa-demo-service/?[1-100000]" > /dev/null; done

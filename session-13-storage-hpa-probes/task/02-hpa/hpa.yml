@@ -1,0 +1,25 @@
+# Based on 04-hpa/hpa.yaml. Changes: namespace, and a behavior block that lowers
+# the scale-down stabilization window from the default 300s to 60s so the
+# scale-down can be watched in a few minutes instead of waiting 5+ minutes.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-demo
+  namespace: s13-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: hpa-demo
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60

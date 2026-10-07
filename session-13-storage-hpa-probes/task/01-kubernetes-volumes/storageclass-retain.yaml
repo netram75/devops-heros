@@ -1,0 +1,22 @@
+# Dynamic provisioning like "standard" (Immediate binding), but reclaimPolicy Retain,
+# so the auto-created PV is kept (Released) after the PVC is deleted.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: s13-retain
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: retain-pvc
+  namespace: s13-vol
+spec:
+  storageClassName: s13-retain
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
