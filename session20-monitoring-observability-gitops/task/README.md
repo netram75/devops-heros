@@ -526,7 +526,7 @@ index dab36c3..9993b39 100644
 -    newTag: 6.9.1
 +    newTag: 6.9.2
 
-$ git commit -q -am 'gitops: scale podinfo to 3 replicas and bump image to 6.9.2' -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>' && git log --oneline -1
+$ git commit -q -am 'gitops: scale podinfo to 3 replicas and bump image to 6.9.2' && git log --oneline -1
 8830eaf gitops: scale podinfo to 3 replicas and bump image to 6.9.2
 
 $ git push origin session20-gitops 2>&1 | tail -1; date +%T
@@ -643,7 +643,7 @@ index 9993b39..38c1131 100644
    - name: podinfo
      count: 3
 
-$ git commit -q -am 'gitops: remove legacy-config (Argo CD should prune it)' -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>' && git log --oneline -1 && git push origin session20-gitops 2>&1 | tail -1; date +%T
+$ git commit -q -am 'gitops: remove legacy-config (Argo CD should prune it)' && git log --oneline -1 && git push origin session20-gitops 2>&1 | tail -1; date +%T
 09a0005 gitops: remove legacy-config (Argo CD should prune it)
    8830eaf..09a0005  session20-gitops -> session20-gitops
 22:38:25
