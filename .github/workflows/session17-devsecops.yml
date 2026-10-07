@@ -164,7 +164,7 @@ jobs:
 
   # ---------------------------------------------------------------- 4. secret scan
   secret-scan:
-    name: 4. Secret scan (Gitleaks, full history)
+    name: 4. Secret scan (Gitleaks, full history of HEAD)
     needs: sca
     runs-on: ubuntu-latest
     steps:
@@ -187,7 +187,10 @@ jobs:
         working-directory: .
         run: |
           mkdir -p "$APP_DIR/reports"
+          # Gitleaks' default is `git log --all`, which also scans every OTHER branch the
+          # checkout fetched. Scan only the history of the commit being built.
           gitleaks git . --config "$APP_DIR/security/gitleaks.toml" \
+            --log-opts="--full-history HEAD" \
             --redact --no-banner --verbose --exit-code 0 \
             --report-format json --report-path "$APP_DIR/reports/gitleaks.json"
           echo "findings: $(python3 -c "import json;print(len(json.load(open('$APP_DIR/reports/gitleaks.json'))))")"
