@@ -1,0 +1,8 @@
+# Bandit (Python SAST) configuration used by the pipeline:
+#   bandit -c security/bandit.yaml -r app
+# Tests are excluded because pytest's plain `assert` (B101) is expected there.
+# Nothing is skipped: every Bandit plugin runs against app/.
+exclude_dirs:
+  - tests
+  - .venv
+skips: []

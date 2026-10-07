@@ -1,0 +1,35 @@
+{
+  "_comment": "Security gate policy. security_gate.py reads every scan report and blocks the release if any rule below is broken. A missing or unreadable report also blocks (fail closed).",
+  "bandit": {
+    "report": "bandit.json",
+    "block_severities": ["HIGH"],
+    "min_confidence": "MEDIUM"
+  },
+  "semgrep": {
+    "report": "semgrep.json",
+    "block_severities": ["ERROR"]
+  },
+  "pip_audit": {
+    "report": "pip-audit.json",
+    "_comment": "pip-audit has no severity field, so any known vulnerability that already has a fixed version blocks.",
+    "block_if_fix_available": true
+  },
+  "trivy_fs": {
+    "report": "trivy-fs.json",
+    "block_vuln_severities": ["HIGH", "CRITICAL"],
+    "ignore_unfixed": false,
+    "block_misconfig_severities": ["HIGH", "CRITICAL"],
+    "block_any_secret": true
+  },
+  "gitleaks": {
+    "report": "gitleaks.json",
+    "max_findings": 0
+  },
+  "trivy_image": {
+    "report": "trivy-image.json",
+    "block_vuln_severities": ["HIGH", "CRITICAL"],
+    "_comment_unfixed": "Debian has published no fix for some base-image CVEs. Those cannot be remediated by rebuilding, so they are reported but do not block. Everything with a fixed version blocks.",
+    "ignore_unfixed": true,
+    "block_any_secret": true
+  }
+}

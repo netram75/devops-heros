@@ -1,0 +1,20 @@
+# Shared Trivy settings for both pipeline scans:
+#   SCA + IaC : trivy fs    --config security/trivy.yaml --scanners vuln,misconfig,secret .
+#   Image     : trivy image --config security/trivy.yaml --scanners vuln,secret --input image.tar
+# Trivy runs in "report mode" here: it records EVERY severity and always exits 0.
+# Deciding what blocks a release is the security gate's job (gate-policy.json),
+# so the policy lives in one place instead of being spread over --exit-code flags.
+timeout: 10m
+exit-code: 0
+severity:
+  - UNKNOWN
+  - LOW
+  - MEDIUM
+  - HIGH
+  - CRITICAL
+scan:
+  skip-dirs:
+    - tests
+    - .venv
+pkg:
+  include-dev-deps: false
