@@ -1,0 +1,11 @@
+#!/bin/bash
+# Runs once, as root, on the first boot of the instance (real AWS only;
+# LocalStack stores user_data but never boots a VM).
+set -euo pipefail
+dnf install -y nginx
+cat > /usr/share/nginx/html/index.html <<HTML
+<h1>${project} (${environment})</h1>
+<p>Served by nginx on $(hostname -f), built by Terraform.</p>
+<p>Assets bucket: ${bucket}</p>
+HTML
+systemctl enable --now nginx
