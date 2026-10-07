@@ -4,6 +4,7 @@
 - **Enrollment No:** 24BCS10329
 
 > **Status:** completed
+
 > Run on macOS (Apple Silicon) with Docker Desktop, minikube v1.39.0 (ingress addon), Kubernetes v1.37.0.
 
 Everything below was run for real on my minikube cluster. The text blocks are the exact output of the same run the screenshots were taken from. All secret values in this folder are fake demo values made up for the assignment.
