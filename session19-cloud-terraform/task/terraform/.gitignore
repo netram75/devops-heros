@@ -1,0 +1,13 @@
+# Never commit: downloaded providers, state, saved plans, crash logs
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+
+# The session folder ignores *.tfvars and the lock file. In this project both
+# are deliverables: terraform.tfvars has no secrets and the lock file pins the
+# exact provider builds, so re-include them.
+!terraform.tfvars
+!.terraform.lock.hcl

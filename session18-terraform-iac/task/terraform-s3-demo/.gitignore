@@ -1,0 +1,19 @@
+# Provider plugins downloaded by terraform init (big binaries, re-downloadable)
+.terraform/
+
+# State can contain secrets and is machine-specific: never commit it
+*.tfstate
+*.tfstate.*
+
+# Saved plan files (binary, contain values)
+*.tfplan
+
+crash.log
+crash.*.log
+
+# The parent folder ignores terraform.tfvars; this demo's tfvars holds no
+# secrets and is part of the deliverable, so keep it.
+!terraform.tfvars
+
+# .terraform.lock.hcl is intentionally NOT ignored: it pins provider versions
+# and checksums so every machine gets the same provider build.
