@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <!-- Hand-drawn architecture for session19-cloud-terraform/task/terraform (Netram, 24BCS10329) -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3b4250"/>
+    </marker>
+    <marker id="arrow-tf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7b42bc"/>
+    </marker>
+    <marker id="arrow-dep" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a8f98"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="800" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="30" y="40" font-size="22" font-weight="700" fill="#1f2328">netram-web: Session 19 Terraform project</text>
+  <text x="30" y="64" font-size="14" fill="#57606a">17 resources from session19-cloud-terraform/task/terraform, applied to LocalStack 4.14 (ap-south-1)</text>
+
+  <!-- Laptop / Terraform -->
+  <rect x="30" y="110" width="230" height="250" rx="10" fill="#f6f1fd" stroke="#7b42bc" stroke-width="2"/>
+  <text x="45" y="138" font-size="16" font-weight="700" fill="#5a2d91">My laptop (macOS arm64)</text>
+  <text x="45" y="166" font-size="13.5" fill="#1f2328">Terraform 1.16.5</text>
+  <text x="45" y="190" font-size="13.5" fill="#1f2328">providers:</text>
+  <text x="60" y="210" font-size="13" fill="#1f2328">hashicorp/aws 6.67.0</text>
+  <text x="60" y="229" font-size="13" fill="#1f2328">hashicorp/random 3.9.1</text>
+  <text x="45" y="256" font-size="13.5" fill="#1f2328">*.tf files + terraform.tfvars</text>
+  <rect x="45" y="272" width="200" height="72" rx="6" fill="#ffffff" stroke="#7b42bc" stroke-dasharray="4 3"/>
+  <text x="57" y="294" font-size="13" font-weight="600" fill="#5a2d91">terraform.tfstate (local)</text>
+  <text x="57" y="313" font-size="12.5" fill="#57606a">resource address -&gt; real ID</text>
+  <text x="57" y="331" font-size="12.5" fill="#57606a">never committed to git</text>
+
+  <!-- API endpoint -->
+  <rect x="30" y="420" width="230" height="120" rx="10" fill="#ffffff" stroke="#7b42bc" stroke-width="2"/>
+  <text x="45" y="447" font-size="16" font-weight="700" fill="#5a2d91">AWS API endpoint</text>
+  <text x="45" y="473" font-size="13" fill="#1f2328">use_localstack = true:</text>
+  <text x="60" y="492" font-size="13" fill="#1f2328">LocalStack, localhost:4577</text>
+  <text x="45" y="515" font-size="13" fill="#1f2328">use_localstack = false:</text>
+  <text x="60" y="533" font-size="13" fill="#1f2328">real AWS (ap-south-1)</text>
+
+  <path d="M145 360 L145 414" stroke="#7b42bc" stroke-width="2" stroke-dasharray="6 4" fill="none" marker-end="url(#arrow-tf)"/>
+  <text x="153" y="392" font-size="12.5" fill="#5a2d91">plan / apply / destroy</text>
+  <path d="M260 480 L292 480" stroke="#7b42bc" stroke-width="2" stroke-dasharray="6 4" fill="none" marker-end="url(#arrow-tf)"/>
+
+  <!-- Internet -->
+  <ellipse cx="770" cy="112" rx="120" ry="30" fill="#f3f4f6" stroke="#3b4250" stroke-width="1.5"/>
+  <text x="770" y="108" font-size="15" font-weight="700" fill="#1f2328" text-anchor="middle">Internet</text>
+  <text x="770" y="127" font-size="12.5" fill="#57606a" text-anchor="middle">browser on :80 / :443, admin on :22</text>
+
+  <!-- Region -->
+  <rect x="300" y="160" width="870" height="610" rx="12" fill="none" stroke="#147eba" stroke-width="2" stroke-dasharray="10 5"/>
+  <rect x="300" y="160" width="250" height="28" rx="12" fill="#147eba"/>
+  <text x="314" y="179" font-size="14" font-weight="700" fill="#ffffff">Region ap-south-1 (Mumbai)</text>
+
+  <!-- VPC -->
+  <rect x="325" y="225" width="545" height="525" rx="10" fill="#faf7ff" stroke="#8c4fff" stroke-width="2.5"/>
+  <text x="340" y="250" font-size="16" font-weight="700" fill="#5a2d91">VPC  aws_vpc.main</text>
+  <text x="340" y="270" font-size="13" fill="#1f2328">10.20.0.0/16, DNS hostnames on, netram-web-dev-vpc</text>
+
+  <!-- IGW on the VPC edge -->
+  <rect x="690" y="200" width="160" height="50" rx="8" fill="#8c4fff" stroke="#5a2d91" stroke-width="1.5"/>
+  <text x="770" y="221" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">Internet gateway</text>
+  <text x="770" y="239" font-size="12" fill="#f3ecff" text-anchor="middle">aws_internet_gateway.igw</text>
+  <path d="M770 142 L770 196" stroke="#3b4250" stroke-width="2" fill="none" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+
+  <!-- AZ -->
+  <rect x="345" y="290" width="505" height="440" rx="8" fill="none" stroke="#147eba" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="360" y="311" font-size="13.5" font-weight="600" fill="#147eba">AZ ap-south-1a  (data.aws_availability_zones)</text>
+
+  <!-- Route table -->
+  <rect x="370" y="325" width="455" height="82" rx="8" fill="#ffffff" stroke="#3b4250" stroke-width="1.5"/>
+  <text x="385" y="347" font-size="14" font-weight="700" fill="#1f2328">Route table  aws_route_table.public</text>
+  <text x="385" y="368" font-size="13" font-family="ui-monospace, Menlo, monospace" fill="#1f2328">10.20.0.0/16 -&gt; local</text>
+  <text x="385" y="388" font-size="13" font-family="ui-monospace, Menlo, monospace" fill="#1f2328">0.0.0.0/0    -&gt; internet gateway</text>
+  <text x="630" y="368" font-size="12" fill="#57606a">+ aws_route_table_association</text>
+  <path d="M770 250 L770 321" stroke="#3b4250" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M597 407 L597 438" stroke="#3b4250" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <text x="606" y="428" font-size="12" fill="#57606a">associated with</text>
+
+  <!-- Public subnet -->
+  <rect x="370" y="442" width="455" height="275" rx="8" fill="#f3f9ec" stroke="#7aa116" stroke-width="2"/>
+  <text x="385" y="465" font-size="14.5" font-weight="700" fill="#3f6b0a">Public subnet  aws_subnet.public</text>
+  <text x="385" y="484" font-size="13" fill="#1f2328">10.20.1.0/24, map_public_ip_on_launch = true</text>
+
+  <!-- Security group -->
+  <rect x="390" y="498" width="415" height="205" rx="8" fill="none" stroke="#dd344c" stroke-width="2" stroke-dasharray="7 4"/>
+  <text x="403" y="518" font-size="13.5" font-weight="700" fill="#b0213a">Security group  aws_security_group.web</text>
+  <text x="403" y="537" font-size="12.5" fill="#1f2328">in: 80, 443 from 0.0.0.0/0   |   22 from 203.0.113.10/32 only</text>
+  <text x="403" y="555" font-size="12.5" fill="#1f2328">out: all   (4 aws_vpc_security_group_*_rule resources)</text>
+
+  <!-- EC2 -->
+  <rect x="410" y="568" width="375" height="122" rx="8" fill="#fff4e8" stroke="#ed7100" stroke-width="2"/>
+  <text x="425" y="591" font-size="15" font-weight="700" fill="#a34e00">EC2  aws_instance.web</text>
+  <text x="425" y="611" font-size="12.5" fill="#1f2328">t3.micro, Amazon Linux 2023 (data.aws_ami.al2023)</text>
+  <text x="425" y="630" font-size="12.5" fill="#1f2328">private 10.20.1.4 + public IPv4, IMDSv2 required</text>
+  <text x="425" y="649" font-size="12.5" fill="#1f2328">root: gp3 8 GiB encrypted</text>
+  <text x="425" y="668" font-size="12.5" fill="#1f2328">user_data: dnf install nginx (runs only on real AWS)</text>
+  <text x="425" y="684" font-size="11.5" fill="#57606a">depends_on = [aws_route_table_association.public]</text>
+
+  <!-- S3 (regional, outside the VPC) -->
+  <rect x="905" y="225" width="245" height="330" rx="10" fill="#f2f8ef" stroke="#3f8624" stroke-width="2.5"/>
+  <text x="920" y="250" font-size="16" font-weight="700" fill="#2c5f19">S3 bucket</text>
+  <text x="920" y="269" font-size="12.5" fill="#1f2328">aws_s3_bucket.assets</text>
+  <text x="920" y="288" font-size="12" fill="#1f2328">netram-web-dev-assets-&lt;hex&gt;</text>
+  <text x="920" y="310" font-size="12.5" fill="#1f2328">versioning: Enabled</text>
+  <text x="920" y="329" font-size="12.5" fill="#1f2328">public access: all 4 blocks on</text>
+  <text x="920" y="348" font-size="12" fill="#57606a">regional service, not inside the VPC</text>
+
+  <rect x="920" y="364" width="215" height="50" rx="6" fill="#ffffff" stroke="#3f8624"/>
+  <text x="932" y="384" font-size="12.5" font-weight="600" fill="#1f2328">site/index.html</text>
+  <text x="932" y="402" font-size="11.5" fill="#57606a">aws_s3_object.index (etag = md5)</text>
+
+  <rect x="920" y="424" width="215" height="66" rx="6" fill="#ffffff" stroke="#3f8624"/>
+  <text x="932" y="444" font-size="12.5" font-weight="600" fill="#1f2328">deployments/dev.json</text>
+  <text x="932" y="462" font-size="11.5" fill="#57606a">aws_s3_object.deployment_record</text>
+  <text x="932" y="479" font-size="11.5" fill="#57606a">JSON of VPC, subnet, instance IDs</text>
+
+  <rect x="920" y="502" width="215" height="40" rx="6" fill="#ffffff" stroke="#8a8f98" stroke-dasharray="4 3"/>
+  <text x="932" y="520" font-size="12" fill="#1f2328">random_id.bucket_suffix</text>
+  <text x="932" y="535" font-size="11.5" fill="#57606a">4 random bytes, makes name unique</text>
+
+  <!-- implicit dependency EC2 -> deployment record -->
+  <path d="M785 630 C 870 630, 860 457, 914 457" stroke="#8a8f98" stroke-width="2" stroke-dasharray="3 4" fill="none" marker-end="url(#arrow-dep)"/>
+  <text x="880" y="600" font-size="12" fill="#57606a">instance ID written into</text>
+  <text x="880" y="616" font-size="12" fill="#57606a">the record (implicit dependency)</text>
+
+  <!-- Legend -->
+  <rect x="905" y="640" width="245" height="110" rx="8" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="920" y="662" font-size="13" font-weight="700" fill="#1f2328">Legend</text>
+  <path d="M920 682 L965 682" stroke="#3b4250" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="975" y="686" font-size="12" fill="#1f2328">network traffic path</text>
+  <path d="M920 706 L965 706" stroke="#7b42bc" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrow-tf)"/>
+  <text x="975" y="710" font-size="12" fill="#1f2328">Terraform API calls</text>
+  <path d="M920 730 L965 730" stroke="#8a8f98" stroke-width="2" stroke-dasharray="3 4" marker-end="url(#arrow-dep)"/>
+  <text x="975" y="734" font-size="12" fill="#1f2328">data dependency</text>
+</svg>
