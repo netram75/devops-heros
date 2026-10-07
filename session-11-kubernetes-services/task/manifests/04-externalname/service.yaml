@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-database-service
+  namespace: s11-services
+spec:
+  type: ExternalName
+  externalName: example.com

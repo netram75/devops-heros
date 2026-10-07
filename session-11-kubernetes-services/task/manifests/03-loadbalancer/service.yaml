@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service-loadbalancer
+  namespace: s11-services
+  labels:
+    app: web-loadbalancer
+spec:
+  type: LoadBalancer
+  selector:
+    app: web-loadbalancer
+  ports:
+    - name: http
+      port: 18180   # course used 80; a high port so minikube tunnel needs no sudo
+      targetPort: 80
+      protocol: TCP
