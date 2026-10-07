@@ -26,7 +26,7 @@ Update the status column as you go.
 | 17 | Complete CI/CD & DevSecOps | [folder](session-17-devsecops/) | [task](session-17-devsecops/task/) | not started |
 | 18 | Terraform & Infrastructure as Code | [Readme.md](session18-terraform-iac/Readme.md) | [task](session18-terraform-iac/task/) | done |
 | 19 | Cloud & Terraform in Action | [folder](session19-cloud-terraform/) | [task](session19-cloud-terraform/task/) | done |
-| 20 | Monitoring, Observability & GitOps | [folder](session20-monitoring-observability-gitops/) | [task](session20-monitoring-observability-gitops/task/) | not started |
+| 20 | Monitoring, Observability & GitOps | [folder](session20-monitoring-observability-gitops/) | [task](session20-monitoring-observability-gitops/task/) | done |
 
 ## How this repo is organised
 
