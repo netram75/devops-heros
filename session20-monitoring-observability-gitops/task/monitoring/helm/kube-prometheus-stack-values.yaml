@@ -45,8 +45,12 @@ grafana:
   persistence:
     enabled: false
   resources:
-    requests: { cpu: 50m, memory: 128Mi }
-    limits: { memory: 300Mi }
+    requests: { cpu: 50m, memory: 192Mi }
+    limits: { memory: 512Mi }   # 300Mi got OOMKilled on the first dashboard load
+  env:
+    # Go does not read the cgroup limit by itself; without this the heap grew
+    # past 512Mi and the container was OOMKilled a second time.
+    GOMEMLIMIT: 360MiB
   sidecar:
     resources:
       requests: { cpu: 10m, memory: 48Mi }
