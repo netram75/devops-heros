@@ -81,10 +81,6 @@ def create_app():
             item["done"] = True
         return jsonify(item)
 
-    # SECURITY GATE DEMO: registers the deliberately insecure blueprint.
-    from app.diagnostics import bp as diagnostics_bp
-    app.register_blueprint(diagnostics_bp)
-
     @app.errorhandler(404)
     def not_found(_err):
         return jsonify(error="not found"), 404
