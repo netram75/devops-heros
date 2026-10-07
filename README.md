@@ -23,7 +23,7 @@ Update the status column as you go.
 | 14 | Kubernetes Troubleshooting | [README.md](session-14-kubernetes-troubleshooting/README.md) | [task](session-14-kubernetes-troubleshooting/task/) | done |
 | 15 | Helm | [README.md](session-15-helm/README.md) | [task](session-15-helm/task/) | done |
 | 16 | CI/CD & GitHub Actions | [folder](session-16-github-actions/) | [task](session-16-github-actions/task/) | done |
-| 17 | Complete CI/CD & DevSecOps | [folder](session-17-devsecops/) | [task](session-17-devsecops/task/) | not started |
+| 17 | Complete CI/CD & DevSecOps | [folder](session-17-devsecops/) | [task](session-17-devsecops/task/) | done |
 | 18 | Terraform & Infrastructure as Code | [Readme.md](session18-terraform-iac/Readme.md) | [task](session18-terraform-iac/task/) | done |
 | 19 | Cloud & Terraform in Action | [folder](session19-cloud-terraform/) | [task](session19-cloud-terraform/task/) | done |
 | 20 | Monitoring, Observability & GitOps | [folder](session20-monitoring-observability-gitops/) | [task](session20-monitoring-observability-gitops/task/) | done |
