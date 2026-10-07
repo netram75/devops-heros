@@ -8,5 +8,3 @@ click==8.5.0
 itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.4
-# SECURITY GATE DEMO: an old urllib3 pin with known HIGH CVEs (fixed in later releases).
-urllib3==1.26.5
