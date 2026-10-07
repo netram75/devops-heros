@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: final-app
+  labels:
+    app.kubernetes.io/name: final-app
+spec:
+  # No "replicas" on purpose: the HPA owns the replica count. If the Deployment
+  # also set it, every kubectl apply / Argo CD sync would fight the HPA.
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: final-app
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: final-app
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile: { type: RuntimeDefault }
+      initContainers:
+        # Native sidecar (restartPolicy: Always): streams the access log file from
+        # the PVC to stdout, so "kubectl logs -c access-log" still works.
+        - name: access-log
+          image: busybox:1.37
+          imagePullPolicy: IfNotPresent
+          restartPolicy: Always
+          command: ["sh", "-c", "touch /var/log/app/$(POD_NAME)-access.log && exec tail -n 0 -F /var/log/app/$(POD_NAME)-access.log"]
+          env:
+            - name: POD_NAME
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          resources:
+            requests: { cpu: 5m, memory: 8Mi }
+            limits: { cpu: 50m, memory: 16Mi }
+          volumeMounts:
+            - { name: logs, mountPath: /var/log/app }
+      containers:
+        - name: app
+          image: final-app:1.0.0          # built into minikube with "minikube image build"
+          imagePullPolicy: IfNotPresent
+          # Same as the image CMD, except the access log goes to the PVC.
+          command: ["gunicorn"]
+          args: ["--bind", "0.0.0.0:8080", "--workers", "2", "--worker-tmp-dir", "/tmp",
+                 "--no-control-socket", "--access-logfile", "$(ACCESS_LOG_DIR)/$(POD_NAME)-access.log",
+                 "app.main:app"]
+          ports:
+            - { name: http, containerPort: 8080 }
+          envFrom:
+            - configMapRef: { name: final-app-config }
+          env:
+            - name: POD_NAME
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+            - name: API_TOKEN
+              valueFrom:
+                secretKeyRef: { name: final-app-secret, key: api-token }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }   # HPA percentages are relative to this
+            limits: { cpu: 250m, memory: 192Mi }
+          startupProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 2
+            failureThreshold: 15
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet: { path: /readyz, port: http }
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: logs, mountPath: /var/log/app }
+      volumes:
+        - name: tmp
+          emptyDir: { medium: Memory, sizeLimit: 16Mi }
+        - name: logs
+          persistentVolumeClaim: { claimName: final-app-logs }
