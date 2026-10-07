@@ -1,0 +1,56 @@
+# IMAGE_PLACEHOLDER is replaced by the CD job with ghcr.io/netram75/devops-heros-session16:<commit sha>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s16-calculator
+  labels:
+    app: s16-calculator
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: s16-calculator
+  template:
+    metadata:
+      labels:
+        app: s16-calculator
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          image: IMAGE_PLACEHOLDER
+          ports:
+            - containerPort: 8000
+          env:
+            - name: API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: s16-app-secret
+                  key: API_TOKEN
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 192Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]

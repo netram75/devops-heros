@@ -1,0 +1,142 @@
+# Session 16 - CD pipeline. It has no push trigger of its own: it only runs when the CI
+# workflow calls it after every CI job passed, so it always ships an image that was tested.
+#   publish: take the exact image CI built (artifact), push it to GHCR as :<sha> and :latest
+#   deploy:  create a throwaway kind cluster on the runner, pull that image from GHCR,
+#            roll it out, curl it, and keep the evidence as an artifact
+name: Session 16 CD
+
+on:
+  workflow_call:
+    secrets:
+      DEMO_API_TOKEN:
+        required: true
+
+env:
+  IMAGE: ghcr.io/netram75/devops-heros-session16
+  APP_DIR: session-16-github-actions/task
+
+jobs:
+  publish:
+    name: Publish image to GHCR
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - name: Download the image CI built and tested
+        uses: actions/download-artifact@v8
+        with:
+          name: docker-image
+          path: ${{ runner.temp }}
+
+      - name: Load image
+        run: docker load --input "$RUNNER_TEMP/s16-calculator.tar"
+
+      - name: Log in to GHCR with the built-in GITHUB_TOKEN
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag and push :${{ github.sha }} and :latest
+        id: push
+        run: |
+          docker tag "s16-calculator:${GITHUB_SHA}" "${IMAGE}:${GITHUB_SHA}"
+          docker tag "s16-calculator:${GITHUB_SHA}" "${IMAGE}:latest"
+          docker push "${IMAGE}:${GITHUB_SHA}"
+          docker push "${IMAGE}:latest"
+          digest=$(docker buildx imagetools inspect "${IMAGE}:${GITHUB_SHA}" --format '{{json .Manifest}}' | jq -r .digest)
+          echo "pushed ${IMAGE}:${GITHUB_SHA} and :latest, digest ${digest}"
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Published image"
+            echo "- \`${IMAGE}:${GITHUB_SHA}\`"
+            echo "- \`${IMAGE}:latest\`"
+            echo "- digest \`${digest}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: Deploy to kind (demo)
+    needs: publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: demo
+    concurrency:
+      group: s16-demo-deploy
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout (for the k8s manifests)
+        uses: actions/checkout@v7
+
+      - name: Create a throwaway kind cluster on the runner
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: s16-demo
+          wait: 120s
+
+      - name: Deploy, wait for rollout, curl the service
+        env:
+          DEMO_API_TOKEN: ${{ secrets.DEMO_API_TOKEN }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DIGEST: ${{ needs.publish.outputs.digest }}
+        run: |
+          set -euo pipefail
+          mkdir -p deploy-report
+          exec > >(tee deploy-report/deploy-output.txt) 2>&1
+
+          echo "== cluster"
+          kubectl get nodes -o wide
+          kubectl create namespace s16
+          kubectl config set-context --current --namespace=s16
+
+          echo "== secrets (values come from GitHub, never echoed)"
+          kubectl create secret docker-registry ghcr-pull --docker-server=ghcr.io \
+            --docker-username="${{ github.actor }}" --docker-password="$GHCR_TOKEN"
+          kubectl create secret generic s16-app-secret --from-literal=API_TOKEN="$DEMO_API_TOKEN"
+
+          echo "== apply manifests with image ${IMAGE}:${GITHUB_SHA}"
+          sed "s|IMAGE_PLACEHOLDER|${IMAGE}:${GITHUB_SHA}|" "$APP_DIR/k8s/deployment.yaml" | kubectl apply -f -
+          kubectl apply -f "$APP_DIR/k8s/service.yaml"
+          kubectl rollout status deployment/s16-calculator --timeout=180s
+          kubectl get deploy,rs,pods,svc -o wide
+
+          echo "== the running pods use exactly the digest that was pushed"
+          kubectl get pods -l app=s16-calculator -o jsonpath='{range .items[*]}{.metadata.name}{"  "}{.status.containerStatuses[0].imageID}{"\n"}{end}'
+          for id in $(kubectl get pods -l app=s16-calculator -o jsonpath='{.items[*].status.containerStatuses[0].imageID}'); do
+            [ "${id##*@}" = "$DIGEST" ] || { echo "digest mismatch: $id vs $DIGEST"; exit 1; }
+          done
+          echo "all pods run ${DIGEST}"
+
+          echo "== curl through kubectl port-forward"
+          kubectl port-forward svc/s16-calculator 8080:80 > deploy-report/port-forward.log 2>&1 &
+          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8080/health >/dev/null 2>&1 && break; sleep 1; done
+          for path in /health / '/api/multiply?a=6&b=7' '/api/divide?a=1&b=0'; do
+            echo "GET $path -> $(curl -sS -w ' [HTTP %{http_code}]' "http://127.0.0.1:8080$path")"
+          done
+          body=$(curl -fsS http://127.0.0.1:8080/)
+          echo "$body" | jq -e --arg sha "$GITHUB_SHA" '.version == $sha and .api_token_configured == true' >/dev/null
+          echo "deployed version matches commit ${GITHUB_SHA} and the API token secret reached the pod"
+
+      - name: Collect cluster state
+        if: always()
+        run: |
+          mkdir -p deploy-report
+          kubectl -n s16 get all -o wide > deploy-report/get-all.txt 2>&1 || true
+          kubectl -n s16 describe deployment s16-calculator > deploy-report/describe-deployment.txt 2>&1 || true
+          kubectl -n s16 get events --sort-by=.lastTimestamp > deploy-report/events.txt 2>&1 || true
+          kubectl -n s16 logs -l app=s16-calculator --tail=50 --prefix > deploy-report/pod-logs.txt 2>&1 || true
+
+      - name: Upload deploy report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: deploy-report
+          path: deploy-report/
+          retention-days: 14
