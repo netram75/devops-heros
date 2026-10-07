@@ -1,0 +1,48 @@
+# Production overrides. Use together with values.yaml:
+#   helm upgrade --install final-app ./final-app -f final-app/values-prod.yaml \
+#     --set image.tag=<git sha> --set secret.apiToken=<from secret store>
+replicaCount: 3
+
+image:
+  pullPolicy: Always
+
+config:
+  APP_ENV: prod
+  LOG_LEVEL: warning
+
+# Placeholder only. Production must pass the real value at install time.
+secret:
+  apiToken: "set-at-install-time"
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: final-app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: final-app-tls
+      hosts:
+        - final-app.example.com
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 60
+
+persistence:
+  enabled: true
+  size: 5Gi

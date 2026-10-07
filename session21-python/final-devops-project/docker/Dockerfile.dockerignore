@@ -1,0 +1,7 @@
+# Build context is session21-python/final-devops-project. Only the app code and
+# its runtime requirements go into the image: no tests, Helm chart, scan
+# reports or docs, so nothing extra can leak into a layer.
+*
+!application/app/
+!application/requirements.txt
+**/__pycache__

@@ -1,0 +1,23 @@
+# Shared Trivy settings for both pipeline scans (run from the project folder):
+#   SCA + IaC : trivy fs    --config security/trivy.yaml --scanners vuln,misconfig,secret .
+#               (covers application/requirements.txt, docker/Dockerfile and the
+#               rendered helm/final-app chart)
+#   Image     : trivy image --config security/trivy.yaml --scanners vuln,secret --input image.tar
+# Trivy runs in "report mode" here: it records EVERY severity and always exits 0.
+# Deciding what blocks a release is the security gate's job (gate-policy.json),
+# so the policy lives in one place instead of being spread over --exit-code flags.
+timeout: 10m
+exit-code: 0
+severity:
+  - UNKNOWN
+  - LOW
+  - MEDIUM
+  - HIGH
+  - CRITICAL
+scan:
+  skip-dirs:
+    - application/tests
+    - .venv
+    - reports
+pkg:
+  include-dev-deps: false

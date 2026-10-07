@@ -1,0 +1,39 @@
+# Project-specific Semgrep rules. The pipeline runs these together with the
+# public p/python and p/flask rulesets:
+#   semgrep scan --config p/python --config p/flask --config security/semgrep-rules.yml application/app
+rules:
+  - id: s17-flask-debug-enabled
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Flask debug mode exposes the Werkzeug debugger (remote code execution).
+      Never enable it in code that ships in the container image.
+    pattern-either:
+      - pattern: $APP.run(..., debug=True, ...)
+      - pattern: $APP.config["DEBUG"] = True
+      - pattern: $APP.debug = True
+
+  - id: s17-subprocess-with-shell
+    languages: [python]
+    severity: ERROR
+    message: >-
+      subprocess called with shell=True. If any part of the command comes from
+      a request this is command injection. Pass an argument list instead.
+    pattern-either:
+      - pattern: subprocess.$FUNC(..., shell=True, ...)
+      - pattern: os.system(...)
+
+  - id: s17-hardcoded-credential
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Credential-looking value hard-coded in source. Read it from an environment
+      variable or a Kubernetes Secret instead.
+    patterns:
+      - pattern: $NAME = "$VALUE"
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i).*(password|passwd|secret|token|api_?key|access_?key).*
+      - metavariable-regex:
+          metavariable: $VALUE
+          regex: .{8,}

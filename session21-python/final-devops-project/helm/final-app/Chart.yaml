@@ -1,0 +1,8 @@
+apiVersion: v2
+name: final-app
+description: Session 21 final DevOps project - release-checklist Flask API
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: netram75
