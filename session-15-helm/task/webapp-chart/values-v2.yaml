@@ -1,0 +1,8 @@
+# Revision 2: new image, new page, 2 replicas
+replicaCount: 2
+image:
+  tag: "1.25-alpine"
+page:
+  version: "v2"
+  message: "Hello from version 2"
+  color: "seagreen"

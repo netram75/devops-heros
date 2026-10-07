@@ -1,0 +1,5 @@
+{{ .Release.Name }} (revision {{ .Release.Revision }}) is serving page {{ .Values.page.version }} with nginx:{{ .Values.image.tag }} and {{ .Values.replicaCount }} replica(s).
+
+Try it:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "webapp.fullname" . }} 18510:{{ .Values.service.port }}
+  curl -s localhost:18510
