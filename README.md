@@ -15,8 +15,18 @@ Update the status column as you go.
 | 5 | Git & GitHub | [resources.md](session5-git-github/resources.md) | [task](session5-git-github/task/) | done |
 | 6–7 | Docker | [docker.md](session6-7-docker/docker.md) | [Task 1](session6-7-docker/task/) · [Task 2](session6-7-docker/Task-2/) | done |
 | 8 | Docker Networking & Volumes | [README.md](session8-docker-networking-volume/README.md) | [task](session8-docker-networking-volume/task/) | done |
-| 9 | Kubernetes | [Readme.md](session9-k8s/Readme.md) | [task](session9-k8s/task/) | not started |
-| 10 | Kubernetes Core Objects | [Readme.md](session10-k8s-core-objects/Readme.md) | [task](session10-k8s-core-objects/task/) | not started |
+| 9 | Kubernetes Fundamentals | [Readme.md](session9-k8s/Readme.md) | [task](session9-k8s/task/) | done |
+| 10 | Kubernetes Pods, ReplicaSets & Deployments | [Readme.md](session10-k8s-core-objects/Readme.md) | [task](session10-k8s-core-objects/task/) | not started |
+| 11 | Kubernetes Networking & Services | [README.md](session-11-kubernetes-services/README.md) | [task](session-11-kubernetes-services/task/) | not started |
+| 12 | Kubernetes Ingress, ConfigMaps & Secrets | [README.md](session-12-ingress-configmaps-secrets/README.md) | [task](session-12-ingress-configmaps-secrets/task/) | not started |
+| 13 | Kubernetes Storage, HPA & Probes | [folder](session-13-storage-hpa-probes/) | [task](session-13-storage-hpa-probes/task/) | not started |
+| 14 | Kubernetes Troubleshooting | [README.md](session-14-kubernetes-troubleshooting/README.md) | [task](session-14-kubernetes-troubleshooting/task/) | not started |
+| 15 | Helm | [README.md](session-15-helm/README.md) | [task](session-15-helm/task/) | not started |
+| 16 | CI/CD & GitHub Actions | [folder](session-16-github-actions/) | [task](session-16-github-actions/task/) | not started |
+| 17 | Complete CI/CD & DevSecOps | [folder](session-17-devsecops/) | [task](session-17-devsecops/task/) | not started |
+| 18 | Terraform & Infrastructure as Code | [Readme.md](session18-terraform-iac/Readme.md) | [task](session18-terraform-iac/task/) | not started |
+| 19 | Cloud & Terraform in Action | [folder](session19-cloud-terraform/) | [task](session19-cloud-terraform/task/) | not started |
+| 20 | Monitoring, Observability & GitOps | [folder](session20-monitoring-observability-gitops/) | [task](session20-monitoring-observability-gitops/task/) | not started |
 
 ## How this repo is organised
 
