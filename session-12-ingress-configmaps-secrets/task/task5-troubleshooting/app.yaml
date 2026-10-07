@@ -1,0 +1,29 @@
+# A tiny "backend" that logs in to Postgres on start-up using the app Secret.
+# If the login fails the container exits 1, so a bad password shows up as CrashLoopBackOff.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yatri-backend
+  namespace: s12-debug
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: yatri-backend}
+  template:
+    metadata:
+      labels: {app: yatri-backend}
+    spec:
+      containers:
+        - name: backend
+          image: postgres:16-alpine     # only used for the psql client
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "connecting to yatri-db as $POSTGRES_USER ..."
+              PGPASSWORD="$POSTGRES_PASSWORD" psql -h yatri-db -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "select 'DB login OK as ' || current_user || ' on ' || current_database()" || exit 1
+              echo "backend ready"; sleep 3600
+          envFrom:
+            - secretRef: {name: app-db-secret}
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {cpu: 100m, memory: 64Mi}

@@ -1,0 +1,23 @@
+# Host-based routing: the Host header decides the Service.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shop-hosts
+  namespace: s12-web
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: web.127.0.0.1.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: {name: frontend-svc, port: {number: 80}}
+    - host: api.127.0.0.1.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: {name: api-svc, port: {number: 80}}

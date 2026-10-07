@@ -1,0 +1,47 @@
+# The database side. The DB team created its admin Secret with
+# `kubectl create secret generic ... --from-literal`, which never adds a newline.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-admin
+  namespace: s12-debug
+type: Opaque
+stringData:
+  POSTGRES_USER: yatri_admin
+  POSTGRES_PASSWORD: demo-pass-not-real
+  POSTGRES_DB: yatri_db
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yatri-db
+  namespace: s12-debug
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: yatri-db}
+  template:
+    metadata:
+      labels: {app: yatri-db}
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          envFrom:
+            - secretRef: {name: postgres-admin}
+          ports:
+            - containerPort: 5432
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 300m, memory: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: yatri-db
+  namespace: s12-debug
+spec:
+  selector: {app: yatri-db}
+  ports:
+    - port: 5432
+      targetPort: 5432

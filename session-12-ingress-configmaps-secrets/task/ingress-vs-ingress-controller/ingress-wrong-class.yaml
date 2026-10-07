@@ -1,0 +1,17 @@
+# Same kind of rule as the working Ingress, but it asks for an IngressClass that
+# no controller implements. Nothing watches it, so it never gets an ADDRESS.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ghost-ingress
+  namespace: s12-web
+spec:
+  ingressClassName: does-not-exist
+  rules:
+    - host: ghost.127.0.0.1.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: {name: frontend-svc, port: {number: 80}}

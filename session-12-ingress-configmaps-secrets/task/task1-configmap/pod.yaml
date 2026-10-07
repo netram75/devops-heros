@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: config-demo
+  namespace: s12-config
+spec:
+  containers:
+    - name: app
+      image: busybox:1.36
+      command: ["sh", "-c", "echo started with ENVIRONMENT=$ENVIRONMENT; sleep 3600"]
+      # 1) every key in the ConfigMap becomes an env var
+      envFrom:
+        - configMapRef:
+            name: yatri-app-config
+      # 2) one key picked out under a different name
+      env:
+        - name: CURRENCY
+          valueFrom:
+            configMapKeyRef:
+              name: yatri-app-config
+              key: DEFAULT_CURRENCY
+      # 3) the app.properties key mounted as a real file
+      volumeMounts:
+        - name: config-file
+          mountPath: /etc/yatri
+          readOnly: true
+      resources:
+        requests: {cpu: 10m, memory: 8Mi}
+        limits: {cpu: 50m, memory: 32Mi}
+  volumes:
+    - name: config-file
+      configMap:
+        name: yatri-app-config
+        items:
+          - key: app.properties
+            path: app.properties
