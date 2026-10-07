@@ -1,0 +1,186 @@
+# Session 16 - CI pipeline (lint -> test matrix -> docker build) for session-16-github-actions/task.
+# When CI is green on main or session16-cicd it calls the separate CD workflow
+# (session16-cd.yml), so CD can never run on a commit that failed CI.
+name: Session 16 CI
+
+on:
+  push:
+    branches: [main, session16-cicd]
+    paths:
+      - "session-16-github-actions/task/**"
+      - ".github/workflows/session16-ci.yml"
+      - ".github/workflows/session16-cd.yml"
+  workflow_dispatch:
+
+# least privilege by default; the CD job below asks for more
+permissions:
+  contents: read
+
+env:
+  APP_DIR: session-16-github-actions/task
+
+defaults:
+  run:
+    working-directory: session-16-github-actions/task
+
+jobs:
+  runner-info:
+    name: Runner info + secret check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Show which runner picked up this job
+        run: |
+          echo "runner.name  = ${{ runner.name }}"
+          echo "runner.os    = ${{ runner.os }} / runner.arch = ${{ runner.arch }}"
+          echo "image        = ${ImageOS:-unknown} ${ImageVersion:-unknown}"
+          echo "cpus         = $(nproc)   memory = $(free -h | awk '/Mem:/ {print $2}')"
+          echo "event        = ${{ github.event_name }}   ref = ${{ github.ref_name }}   sha = ${{ github.sha }}"
+        working-directory: .
+
+      - name: Use the DEMO_API_TOKEN repository secret (value stays masked)
+        env:
+          DEMO_API_TOKEN: ${{ secrets.DEMO_API_TOKEN }}
+        run: |
+          if [ -z "$DEMO_API_TOKEN" ]; then
+            echo "::error::DEMO_API_TOKEN is not available to this run"
+            exit 1
+          fi
+          echo "DEMO_API_TOKEN is available, length = ${#DEMO_API_TOKEN} characters"
+          echo "sha256 prefix (lets me match it to the value I set, without revealing it): $(printf %s "$DEMO_API_TOKEN" | sha256sum | cut -c1-12)"
+          echo "Trying to print the secret directly: $DEMO_API_TOKEN"
+        working-directory: .
+
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: ${{ env.APP_DIR }}/requirements-dev.txt
+
+      - name: Install dev dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: ruff check
+        run: ruff check --output-format=github .
+
+      - name: ruff format --check
+        run: ruff format --check .
+
+  test:
+    name: Unit tests (Python ${{ matrix.python-version }})
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.13", "3.14"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: ${{ env.APP_DIR }}/requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run pytest with coverage
+        run: |
+          mkdir -p reports
+          pytest -v \
+            --junitxml=reports/junit.xml \
+            --cov --cov-report=term-missing \
+            --cov-report=xml:reports/coverage.xml \
+            --cov-report=html:reports/htmlcov \
+            --cov-fail-under=90 | tee reports/pytest-output.txt
+          exit "${PIPESTATUS[0]}"
+
+      - name: Add test summary to the run page
+        if: always()
+        run: |
+          {
+            echo "### Tests on Python ${{ matrix.python-version }}"
+            echo '```'
+            tail -n 12 reports/pytest-output.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload test report + coverage
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report-py${{ matrix.python-version }}
+          path: ${{ env.APP_DIR }}/reports/
+          retention-days: 14
+
+  docker-build:
+    name: Docker build + smoke test
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build image (exported to a tar, not pushed)
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ env.APP_DIR }}
+          build-args: APP_VERSION=${{ github.sha }}
+          tags: s16-calculator:${{ github.sha }}
+          outputs: type=docker,dest=${{ runner.temp }}/s16-calculator.tar
+          cache-from: type=gha,scope=s16
+          cache-to: type=gha,scope=s16,mode=max
+
+      - name: Load image and run a smoke test
+        run: |
+          docker load --input "$RUNNER_TEMP/s16-calculator.tar"
+          docker image ls s16-calculator
+          docker run -d --name s16-smoke --read-only -p 8000:8000 "s16-calculator:${GITHUB_SHA}"
+          for i in $(seq 1 20); do
+            curl -fsS http://127.0.0.1:8000/health && break
+            sleep 1
+          done
+          echo
+          body=$(curl -fsS http://127.0.0.1:8000/)
+          echo "GET / -> $body"
+          echo "$body" | grep -q "\"version\":\"${GITHUB_SHA}\""
+          echo "GET /api/add?a=2&b=3 -> $(curl -fsS 'http://127.0.0.1:8000/api/add?a=2&b=3')"
+          echo "container user: $(docker exec s16-smoke id)"
+          docker logs s16-smoke
+          docker rm -f s16-smoke
+
+      - name: Upload image tar for the CD workflow
+        uses: actions/upload-artifact@v7
+        with:
+          name: docker-image
+          path: ${{ runner.temp }}/s16-calculator.tar
+          retention-days: 3
+
+  cd:
+    name: CD
+    needs: [runner-info, docker-build]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/session16-cicd'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/session16-cd.yml
+    secrets:
+      DEMO_API_TOKEN: ${{ secrets.DEMO_API_TOKEN }}
