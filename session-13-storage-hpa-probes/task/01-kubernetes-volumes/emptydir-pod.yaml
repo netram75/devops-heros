@@ -1,0 +1,29 @@
+# Based on 01-volumes/emptydir-pod.yaml, extended to TWO containers that share
+# the same emptyDir: a busybox "writer" appends a line every 5s, nginx serves it.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: emptydir-demo
+  namespace: s13-vol
+spec:
+  containers:
+    - name: writer
+      image: busybox:1.36
+      command: ["/bin/sh", "-c"]
+      args:
+        - while true; do echo "$(date -u +%H:%M:%S) written by writer" >> /shared/index.html; sleep 5; done
+      resources:
+        requests: {cpu: 10m, memory: 8Mi}
+      volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+    - name: web
+      image: nginx:1.27
+      resources:
+        requests: {cpu: 10m, memory: 16Mi}
+      volumeMounts:
+        - name: shared-data
+          mountPath: /usr/share/nginx/html
+  volumes:
+    - name: shared-data
+      emptyDir: {}

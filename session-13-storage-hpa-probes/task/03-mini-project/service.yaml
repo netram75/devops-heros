@@ -1,0 +1,13 @@
+# Copied from mini-project/service.yaml; only the namespace changed (production-webapp -> s13-production-webapp).
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+  namespace: s13-production-webapp
+spec:
+  type: ClusterIP
+  selector:
+    app: web-app
+  ports:
+    - port: 80
+      targetPort: 80

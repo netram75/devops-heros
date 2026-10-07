@@ -1,0 +1,20 @@
+# Based on 01-volumes/hostpath-pod.yaml (namespace + s13- path added).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-demo
+  namespace: s13-vol
+spec:
+  containers:
+    - name: app
+      image: nginx:1.27
+      resources:
+        requests: {cpu: 10m, memory: 16Mi}
+      volumeMounts:
+        - name: host-storage
+          mountPath: /data
+  volumes:
+    - name: host-storage
+      hostPath:
+        path: /tmp/s13-hostpath-data
+        type: DirectoryOrCreate

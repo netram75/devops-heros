@@ -1,0 +1,9 @@
+# Working WaitForFirstConsumer demo: no dynamic provisioner, the PV is created by
+# hand (local-pv.yaml) and Kubernetes only binds it once a pod needs the claim.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: s13-local-wffc
+provisioner: kubernetes.io/no-provisioner
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer

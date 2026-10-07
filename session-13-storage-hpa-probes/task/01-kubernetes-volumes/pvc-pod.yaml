@@ -1,0 +1,19 @@
+# Based on 02-persistent-storage/pod.yaml (namespace added).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-demo
+  namespace: s13-vol
+spec:
+  containers:
+    - name: app
+      image: nginx:1.27
+      resources:
+        requests: {cpu: 10m, memory: 16Mi}
+      volumeMounts:
+        - name: persistent-storage
+          mountPath: /data
+  volumes:
+    - name: persistent-storage
+      persistentVolumeClaim:
+        claimName: student-pvc

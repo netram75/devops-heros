@@ -1,0 +1,12 @@
+# Copied from mini-project/pvc.yaml; only the namespace changed (production-webapp -> s13-production-webapp).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: web-data
+  namespace: s13-production-webapp
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi

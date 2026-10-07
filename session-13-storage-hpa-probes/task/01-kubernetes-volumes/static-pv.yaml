@@ -1,0 +1,15 @@
+# Based on 02-persistent-storage/pv.yaml. storageClassName "" was added on
+# purpose: see "Problems I hit" (without it the PVC gets the default class).
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: s13-static-pv
+spec:
+  storageClassName: ""
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /tmp/s13-static-pv

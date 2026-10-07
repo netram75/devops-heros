@@ -1,0 +1,15 @@
+# Based on 02-persistent-storage/pvc.yaml. storageClassName "" means
+# "no StorageClass, bind me to an existing PV" instead of the default class.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: student-pvc
+  namespace: s13-vol
+spec:
+  storageClassName: ""
+  volumeName: s13-static-pv
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
