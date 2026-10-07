@@ -5,7 +5,7 @@
 
 > **Status:** completed
 
-> Documentation task. The hands-on part (kube-prometheus-stack on a local kind cluster) is the
+> Documentation task. The hands-on part (kube-prometheus-stack on a local minikube cluster) is the
 > monitoring demo in [../README.md](../README.md). This file covers the concepts behind it.
 
 ---
@@ -247,7 +247,7 @@ Metrics are pulled, logs are tailed from files, traces are pushed. The monitorin
 
 The split that clicked for me: cAdvisor says how much a pod **uses**, kube-state-metrics says what
 Kubernetes **thinks** of it (3 of 5 replicas available, 7 restarts), node-exporter says how the
-**machine** is doing. On kubeadm-style clusters, kind included, the scheduler, controller-manager
+**machine** is doing. On kubeadm-style clusters, minikube included, the scheduler, controller-manager
 and etcd bind their metrics ports to `127.0.0.1` by default, so an in-cluster Prometheus cannot
 reach them until that is changed. Managed clusters (EKS, GKE, AKS) expose only part of the control plane.
 
@@ -257,8 +257,8 @@ reach them until that is changed. Managed clusters (EKS, GKE, AKS) expose only p
 only the latest CPU and memory per pod and node in memory, and serves them through the Metrics API
 (`metrics.k8s.io`), which is what `kubectl top` and the HorizontalPodAutoscaler read. No history, no
 PromQL, and its own README says not to use it for monitoring. They are separate pipelines:
-kube-prometheus-stack does not install metrics-server and kind does not ship it, so full Grafana
-dashboards and a failing `kubectl top` can coexist on the same cluster.
+kube-prometheus-stack does not install metrics-server (on minikube it is a separate addon, which I
+had enabled), so full Grafana dashboards and a failing `kubectl top` can coexist on a cluster without it.
 
 ### Events
 
