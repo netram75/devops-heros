@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: s11-services
+---
+# second namespace, only used to show cross-namespace DNS in fqdn/README.md
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: s11-other

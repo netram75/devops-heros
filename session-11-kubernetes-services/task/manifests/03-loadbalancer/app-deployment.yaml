@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app-loadbalancer
+  namespace: s11-services
+  labels:
+    app: web-loadbalancer
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-loadbalancer
+  template:
+    metadata:
+      labels:
+        app: web-loadbalancer
+    spec:
+      containers:
+        - name: web-server
+          image: nginx:1.25-alpine
+          # added: each pod serves its own name, so I can see which pod answered
+          command: ["sh", "-c", "echo \"served by $(hostname)\" > /usr/share/nginx/html/index.html && exec nginx -g \"daemon off;\""]
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "100m"
+              memory: "128Mi"

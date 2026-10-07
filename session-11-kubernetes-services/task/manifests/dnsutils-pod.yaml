@@ -1,0 +1,19 @@
+# Debug pod with dig + nslookup (bind-tools). Used for the FQDN and CoreDNS tasks.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dnsutils
+  namespace: s11-services
+spec:
+  containers:
+    - name: dnsutils
+      image: alpine:3.20
+      command: ["sh", "-c", "apk add --no-cache bind-tools curl >/dev/null && touch /tmp/ready && sleep 3600"]
+      readinessProbe:
+        exec:
+          command: ["test", "-f", "/tmp/ready"]
+        periodSeconds: 2
+      resources:
+        requests:
+          cpu: "10m"
+          memory: "32Mi"
